@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="General">
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="@string/key_background_color"
+            android:title="Dark Background"
+            android:summary="Change the background to dark color"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Help">
+
+        <SwitchPreference
+            android:title="Send Crash Report"
+            android:key="@string/key_crash_report"
+            android:defaultValue="true"/>
+
+        <Preference
+            android:key="@string/key_send_feedback"
+            android:summary="Got any queries! We are happy to help"
+            android:title="Send Feedback"/>
+
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="About">
+
+        <Preference
+            android:selectable="false"
+            android:summary="We are a team of like-minded people, with the urge of spreading proper hygiene lifestyle by creating new trends across the app space. Glad to help in anyway!"/>
+
+        <Preference
+            android:summary="1.0.0"
+            android:title="Version"/>
+
+        <Preference
+            android:key="string/key_about_us"
+            android:title="About Us"/>
+
+        <Preference
+            android:title="Terms &amp; Conditions"/>
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
