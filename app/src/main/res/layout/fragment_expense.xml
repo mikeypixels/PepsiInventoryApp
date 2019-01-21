@@ -127,7 +127,8 @@
             android:background="@drawable/gradient_color"
             android:text="Submit"
             android:textAllCaps="false"
-            android:textColor="#fff"/>
+            android:textColor="#fff"
+            android:theme="@style/MyButton"/>
 
             <TextView
                 android:id="@+id/action_bar"
