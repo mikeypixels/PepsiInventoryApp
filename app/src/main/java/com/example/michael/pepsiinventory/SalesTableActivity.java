@@ -32,7 +32,7 @@ public class SalesTableActivity extends AppCompatActivity {
     RecyclerView.LayoutManager layoutManager;
     SalesTableAdapter salesTableAdapter;
     TableLayout tableLayout;
-    TableRow tableRow;
+    LinearLayout tableRow;
     android.support.v7.widget.Toolbar toolbar;
     CollapsingToolbarLayout collapsingToolbarLayout;
     String intentFragment;

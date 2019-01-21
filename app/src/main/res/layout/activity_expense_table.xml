@@ -22,7 +22,7 @@
 
             <ImageView
                 android:layout_width="match_parent"
-                android:layout_height="155dp"/>
+                android:layout_height="100dp"/>
 
             <android.support.v7.widget.Toolbar
                 android:id="@+id/toolbar"

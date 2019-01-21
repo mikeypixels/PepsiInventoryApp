@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SalesTableActivity">
+    tools:context=".ExpenseTableActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -29,13 +29,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:titleTextColor="@color/colorWhite"
-                app:popupTheme="@style/AppTheme"
-                app:title="Sales table"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Dark"
+                app:title="Expense table"
                 app:titleTextAppearance="@color/colorWhite"/>
 
         </android.support.design.widget.CollapsingToolbarLayout>
 
     </android.support.design.widget.AppBarLayout>
+
+    <Spinner
+        android:id="@+id/spinner1"
+        android:layout_width="130dp"
+        android:layout_height="30dp"
+        android:layout_gravity="center_horizontal"
+        android:popupElevation="6dp" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recyclerView"

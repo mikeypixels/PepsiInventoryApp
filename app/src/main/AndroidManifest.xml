@@ -32,7 +32,9 @@
         <activity
             android:name=".PopUpActivity2"
             android:theme="@style/AppTheme.CustomTheme" />
-        <activity android:name=".MainActivity"/>
+        <activity android:name=".MainActivity" />
+        <activity android:name=".AdminSalesTableActivity" />
+        <activity android:name=".AdminExpenseTableActivity"></activity>
     </application>
 
 </manifest>

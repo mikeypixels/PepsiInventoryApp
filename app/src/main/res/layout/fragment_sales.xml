@@ -55,7 +55,7 @@
                     android:layout_width="130dp"
                     android:layout_height="30dp"
                     android:layout_gravity="center_horizontal"
-                    android:background="@drawable/spinner_bg"/>
+                    android:popupElevation="6dp"/>
 
                 <android.support.design.widget.TextInputLayout
                     android:layout_height="wrap_content"

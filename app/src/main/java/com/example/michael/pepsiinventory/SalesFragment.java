@@ -3,6 +3,7 @@ package com.example.michael.pepsiinventory;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -58,6 +59,9 @@ public class SalesFragment extends Fragment implements AdapterView.OnItemSelecte
         Spinner spinner = view.findViewById(R.id.spinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(container.getContext(),R.array.stores, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        spinner.getBackground().setColorFilter(getResources().getColor(R.color.colorBlack), PorterDuff.Mode.SRC_ATOP);
+
         spinner.setAdapter(adapter);
         spinner.setOnItemSelectedListener(this);
         final DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener() {

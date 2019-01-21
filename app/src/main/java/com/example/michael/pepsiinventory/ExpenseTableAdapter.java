@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
@@ -39,7 +40,7 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
     public class ExpenseViewHolder extends RecyclerView.ViewHolder {
 
         TextView no, expense_name, amount, date;
-        TableRow tableRow;
+        LinearLayout tableRow;
 
         public ExpenseViewHolder(View itemView) {
             super(itemView);
@@ -169,6 +170,6 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
 
     @Override
     public int getItemCount() {
-        return 20;
+        return 45;
     }
 }
