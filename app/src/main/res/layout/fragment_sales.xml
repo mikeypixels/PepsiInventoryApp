@@ -61,7 +61,7 @@
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent"
                     android:layout_marginTop="20dp"
-                    android:textColorHint="#c0c0c0">
+                    android:theme="@style/EditScreenTextInputLayoutStyle">
 
                     <EditText
                         android:id="@+id/quantity_txt"
@@ -69,9 +69,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="20dp"
                         android:hint=" Quantity"
-                        android:textColorHint="#c0c0c0"
-                        android:textColor="#000"
-                        android:inputType="text" />
+                        android:textColor="#000"/>
 
                 </android.support.design.widget.TextInputLayout>
 
@@ -80,14 +78,14 @@
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent"
                     android:layout_marginTop="30dp"
-                    android:textColorHint="#c0c0c0">
+                    android:textColorHint="#c0c0c0"
+                    android:theme="@style/EditScreenTextInputLayoutStyle">
 
                     <EditText
                         android:id="@+id/datepicker"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint=" Date"
-                        android:textColorHint="#c0c0c0"
                         android:layout_marginTop="30dp"
                         android:focusable="false"
                         android:textColor="#000"/>

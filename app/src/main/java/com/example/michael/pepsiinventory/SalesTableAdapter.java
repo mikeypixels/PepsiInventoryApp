@@ -113,9 +113,10 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
             salesViewHolder.tableRow.setBackgroundColor(Color.parseColor("#FFFFFF"));
             salesViewHolder.no.setTextColor(Color.parseColor("#000000"));
             salesViewHolder.product_name.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+            salesViewHolder.product_name.setPadding(4,0,0,0);
             salesViewHolder.product_name.setTextColor(Color.parseColor("#000000"));
             salesViewHolder.quantity.setTextColor(Color.parseColor("#000000"));
-            salesViewHolder.quantity.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+            salesViewHolder.quantity.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
             salesViewHolder.amount.setTextColor(Color.parseColor("#000000"));
             salesViewHolder.amount.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
             salesViewHolder.date.setTextColor(Color.parseColor("#000000"));

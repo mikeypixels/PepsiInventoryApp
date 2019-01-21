@@ -9,6 +9,8 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:textColorHint">@color/colorWhite</item>
         <item name="colorControlNormal">@color/colorWhite</item>
+        <item name="android:colorControlActivated">#000000</item>
+        <item name="android:colorControlHighlight">#000000</item>
     </style>
 
     <style name="SettingsTheme" parent="Theme.AppCompat.Light.DarkActionBar">
@@ -19,11 +21,24 @@
         <item name="colorControlNormal">@color/colorWhite</item>
     </style>
 
+    <style name="EditScreenTextInputLayoutStyle" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorControlNormal">#c0c0c0</item>
+        <item name="colorControlActivated">@color/colorAccent</item>
+        <item name="colorControlHighlight">@color/colorAccent</item>
+        <item name="android:colorAccent">@color/colorAccent</item>
+        <item name="android:textColorHint">#c0c0c0</item>
+    </style>
+
     <style name="FullHeightDialog" parent="android:style/Theme.Dialog">
         <item name="android:windowNoTitle">true</item>
         <item name="android:background">@color/colorWhite</item>
         <item name="android:buttonStyle">@style/Base.Widget.AppCompat.Button</item>
 
+    </style>
+
+    <style name="MyButton" parent="Theme.AppCompat.Light">
+        <item name="colorControlHighlight">@color/colorAccent</item>
+        <item name="colorButtonNormal">@color/colorPrimary</item>
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />

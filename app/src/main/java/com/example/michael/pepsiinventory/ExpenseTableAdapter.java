@@ -73,6 +73,16 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
             expenseViewHolder.date.setText("expense date");
             expenseViewHolder.date.setTextColor(Color.parseColor("#ffffff"));
         } else {
+
+            expenseViewHolder.tableRow.setBackgroundColor(Color.parseColor("#ffffff"));
+            expenseViewHolder.tableRow.setPadding(13, 13, 13, 13);
+            expenseViewHolder.tableRow.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+            expenseViewHolder.no.setTextColor(Color.parseColor("#000000"));
+            expenseViewHolder.expense_name.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+            expenseViewHolder.expense_name.setTextColor(Color.parseColor("#000000"));
+            expenseViewHolder.amount.setTextColor(Color.parseColor("#000000"));
+            expenseViewHolder.date.setTextColor(Color.parseColor("#000000"));
+
             Log.d(TAG, "value" + i);
             expenseViewHolder.no.setText(expenseRowArrayList.get(i).getNo());
             expenseViewHolder.expense_name.setText(expenseRowArrayList.get(i).getExpense_name());
