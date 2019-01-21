@@ -50,41 +50,26 @@ public class SalesTableActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_sales_table);
 
         intentFragment = getIntent().getStringExtra("frgToLoad");
         tableRow = findViewById(R.id.tableRow1);
 
-//        tableLayout = new TableLayout(this);
-//        tableRow = new TableRow(this);
-//        sn = new TextView(this);
-//        product_name = new TextView(this);
-//        quantity = new TextView(this);
-//        amount = new TextView(this);
-//        date = new TextView(this);
-//        sn.setText("S/N");
-//        product_name.setText("product name");
-//        quantity.setText("quantity");
-//        amount.setText("amount");
-//        date.setText("date");
-//        tableRow.addView(sn);
-//        tableRow.addView(product_name);
-//        tableRow.addView(quantity);
-//        tableRow.addView(amount);
-//        tableRow.addView(date);
-//        tableRow.setPadding(10,10,10,10);
-//        tableRow.setBackgroundColor(5);
-//        tableLayout.addView(tableRow);
-
         toolbar = findViewById(R.id.toolbar);
         collapsingToolbarLayout = findViewById(R.id.collapsingToolbar);
-//        collapsingToolbarLayout.setTitle("Sales Table");
-        setSupportActionBar(toolbar);
-//        if(getSupportActionBar()!=null) {
-            ActionBar actionBar = getSupportActionBar();
-//            actionBar.setDisplayHomeAsUpEnabled(true);
-//        }
 
-        setContentView(R.layout.activity_sales_table);
+        toolbar.setNavigationIcon(getResources().getDrawable(R.drawable.ic_arrow_back));
+
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+
         salesRows = getList();
 
         recyclerView = findViewById(R.id.recyclerView);

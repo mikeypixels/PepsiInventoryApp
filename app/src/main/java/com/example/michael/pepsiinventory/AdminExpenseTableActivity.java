@@ -53,7 +53,19 @@ public class AdminExpenseTableActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbar);
         collapsingToolbarLayout = findViewById(R.id.collapsingToolbar);
 //        collapsingToolbarLayout.setTitle("Sales Table");
+        toolbar.setNavigationIcon(getResources().getDrawable(R.drawable.ic_arrow_back));
+
         setSupportActionBar(toolbar);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+
         ActionBar actionBar = getSupportActionBar();
 //        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 

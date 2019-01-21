@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.View;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -40,9 +42,19 @@ public class ExpenseTableActivity extends AppCompatActivity {
 
         toolbar = findViewById(R.id.toolbar);
         collapsingToolbarLayout = findViewById(R.id.collapsingToolbar);
-//        collapsingToolbarLayout.setTitle("Sales Table");
+
+        toolbar.setNavigationIcon(getResources().getDrawable(R.drawable.ic_arrow_back));
+
         setSupportActionBar(toolbar);
-//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
 
         expenseRows = getList();
 
@@ -59,15 +71,8 @@ public class ExpenseTableActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
 
-        // show menu only when home fragment is selected
-        if (navItemIndex == 1) {
-            getMenuInflater().inflate(R.menu.main, menu);
-        }
-
-        // when fragment is notifications, load the menu created for notifications
-        if (navItemIndex == 2) {
-            getMenuInflater().inflate(R.menu.notification, menu);
-        }
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main, menu);
         return true;
     }
 

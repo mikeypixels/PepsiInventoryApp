@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
                         drawer.closeDrawers();
                         break;
                     case R.id.nav_mysales:
-                        Intent intent = new Intent(MainActivity.this,AdminSalesTableActivity.class);
+                        Intent intent = new Intent(MainActivity.this,SalesTableActivity.class);
 //                        Toolbar toolbar = findViewById(R.id.toolbar);
 //                        toolbar.setTitle("Sales table");
                         intent.putExtra("frgLoad",CURRENT_TAG);
@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
                         drawer.closeDrawers();
                         break;
                     case R.id.nav_myexpenses:
-                        Intent intent1 = new Intent(MainActivity.this,AdminExpenseTableActivity.class);
+                        Intent intent1 = new Intent(MainActivity.this,ExpenseTableActivity.class);
                         startActivity(intent1);
                         drawer.closeDrawers();
                         break;
