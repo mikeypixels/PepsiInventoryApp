@@ -62,11 +62,11 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
         if (i == 0) {
             expenseViewHolder.tableRow.setBackgroundColor(Color.parseColor("#222F48"));
             expenseViewHolder.tableRow.setPadding(13, 13, 13, 13);
-            expenseViewHolder.tableRow.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+//            expenseViewHolder.tableRow.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
             expenseViewHolder.no.setText("S/N");
             expenseViewHolder.no.setTextColor(Color.parseColor("#ffffff"));
             expenseViewHolder.expense_name.setText("expense");
-            expenseViewHolder.expense_name.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+//            expenseViewHolder.expense_name.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
             expenseViewHolder.expense_name.setTextColor(Color.parseColor("#ffffff"));
             expenseViewHolder.amount.setText("amount");
             expenseViewHolder.amount.setTextColor(Color.parseColor("#ffffff"));
@@ -74,11 +74,11 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
             expenseViewHolder.date.setTextColor(Color.parseColor("#ffffff"));
         } else {
 
-            expenseViewHolder.tableRow.setBackgroundColor(Color.parseColor("#ffffff"));
+            expenseViewHolder.tableRow.setBackgroundColor(Color.parseColor("#efefef"));
             expenseViewHolder.tableRow.setPadding(13, 13, 13, 13);
-            expenseViewHolder.tableRow.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+//            expenseViewHolder.tableRow.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
             expenseViewHolder.no.setTextColor(Color.parseColor("#000000"));
-            expenseViewHolder.expense_name.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+//            expenseViewHolder.expense_name.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
             expenseViewHolder.expense_name.setTextColor(Color.parseColor("#000000"));
             expenseViewHolder.amount.setTextColor(Color.parseColor("#000000"));
             expenseViewHolder.date.setTextColor(Color.parseColor("#000000"));
