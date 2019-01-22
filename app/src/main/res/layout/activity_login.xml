@@ -9,16 +9,6 @@
     android:background="@drawable/gradient"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_margin="60dp"
-        android:src="@drawable/pepsibottle"/>
-
 
     <android.support.v7.widget.CardView
         android:id="@+id/white_card"
@@ -33,7 +23,7 @@
         app:cardCornerRadius="8dp"
         app:cardUseCompatPadding="true"
         app:elevation="10dp"
-        android:alpha="0.6">
+        android:alpha="1">
 
         <ScrollView
             android:layout_width="match_parent"
@@ -149,6 +139,22 @@
                     android:gravity="center"
                     android:layout_marginTop="@dimen/activity_horizontal_margin"
                     android:textColor="@color/colorPrimary"/>
+
+                <android.support.constraint.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        android:layout_margin="0dp"
+                        android:src="@drawable/pepsibottle"/>
+
+                </android.support.constraint.ConstraintLayout>
 
 
             </LinearLayout>
