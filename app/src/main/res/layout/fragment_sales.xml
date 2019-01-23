@@ -70,7 +70,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="20dp"
                         android:hint=" Quantity"
-                        android:textColor="#000"/>
+                        android:textColor="#000"
+                        android:inputType="number"/>
 
                 </android.support.design.widget.TextInputLayout>
 
@@ -87,7 +88,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint=" Date"
-                        android:layout_marginTop="30dp"
+                        android:layout_marginTop="20dp"
                         android:focusable="false"
                         android:textColor="#000"/>
 
@@ -96,7 +97,7 @@
                 <android.support.constraint.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="50dp">
+                    android:layout_marginTop="30dp">
                 <Button
                     android:id="@+id/send1"
                     android:layout_width="match_parent"

@@ -75,12 +75,12 @@ public class ExpenseFragment extends Fragment {
 
                 Log.d(TAG, "onReceiving: " + datepicker.getText().toString());
                     if (amount.getText().toString().isEmpty() || name.getText().toString().isEmpty() || description.getText().toString().isEmpty() || datepicker.getText().toString().isEmpty()) {
-                        action_bar.setText("please fill all fields");
+                        action_bar.setText("please fill all fields!");
                     } else {
                         if (intChecker.Checker(amount.getText().toString())) {
                             action_bar.setText("");
                         } else {
-                            action_bar.setText("amount should be in number format");
+                            action_bar.setText("amount should be in number format!");
                         }
                     }
 

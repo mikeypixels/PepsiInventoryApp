@@ -29,6 +29,7 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
     Button editButton, deleteButton, saveButton, cancelButton;
     EditText pName, description0, qtty, amt, dateV;
     TextView sNo;
+    int j = 0;
 
     final static public String TAG = ExpenseTableAdapter.class.getSimpleName();
 
@@ -85,12 +86,12 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
             expenseViewHolder.date.setTextColor(Color.parseColor("#000000"));
 
             Log.d(TAG, "value" + i);
-            expenseViewHolder.no.setText(expenseRowArrayList.get(i).getNo());
-            expenseViewHolder.expense_name.setText(expenseRowArrayList.get(i).getExpense_name());
-            expenseViewHolder.amount.setText(expenseRowArrayList.get(i).getAmount());
-            expenseViewHolder.date.setText(expenseRowArrayList.get(i).getDate());
+            expenseViewHolder.no.setText(expenseRowArrayList.get(i-1).getNo());
+            expenseViewHolder.expense_name.setText(expenseRowArrayList.get(i-1).getExpense_name());
+            expenseViewHolder.amount.setText(expenseRowArrayList.get(i-1).getAmount());
+            expenseViewHolder.date.setText(expenseRowArrayList.get(i-1).getDate());
 
-            final ExpenseRow expenseRow = expenseRowArrayList.get(i);
+            final ExpenseRow expenseRow = expenseRowArrayList.get(i-1);
 
             expenseViewHolder.tableRow.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -170,6 +171,6 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
 
     @Override
     public int getItemCount() {
-        return 45;
+        return expenseRowArrayList.size()+1;
     }
 }

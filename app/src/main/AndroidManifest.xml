@@ -34,7 +34,10 @@
             android:theme="@style/AppTheme.CustomTheme" />
         <activity android:name=".MainActivity" />
         <activity android:name=".AdminSalesTableActivity" />
-        <activity android:name=".AdminExpenseTableActivity"></activity>
+        <activity android:name=".AdminExpenseTableActivity" />
+        <activity android:name=".AdminActivity" />
+        <activity android:name=".UserListTableActivity" />
+        <activity android:name=".StoreListTableActivity"></activity>
     </application>
 
 </manifest>

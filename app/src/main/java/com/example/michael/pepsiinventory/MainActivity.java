@@ -126,10 +126,15 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(intent1);
                         drawer.closeDrawers();
                         break;
-                    case R.id.nav_settings:
-                        Intent intent2 = new Intent(MainActivity.this,SettingsPrefActivity.class);
-                        intent2.putExtra("frgLoad",CURRENT_TAG);
+                    case R.id.nav_admin_panel:
+                        Intent intent2 = new Intent(MainActivity.this,AdminActivity.class);
                         startActivity(intent2);
+                        drawer.closeDrawers();
+                        break;
+                    case R.id.nav_settings:
+                        Intent intent3 = new Intent(MainActivity.this,SettingsPrefActivity.class);
+                        intent3.putExtra("frgLoad",CURRENT_TAG);
+                        startActivity(intent3);
                         drawer.closeDrawers();
                         return true;
                     case R.id.nav_about_us:
@@ -286,8 +291,8 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_logout) {
-//            Intent intent = new Intent(MainActivity.this,LoginActivity.class);
-//           startActivity(intent);
+            Intent intent = new Intent(MainActivity.this,LoginActivity.class);
+           startActivity(intent);
             Toast.makeText(getApplicationContext(), "succesfully logged out!", Toast.LENGTH_SHORT).show();
             finish();
             return true;

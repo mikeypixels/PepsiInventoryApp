@@ -88,12 +88,12 @@ public class SalesFragment extends Fragment implements AdapterView.OnItemSelecte
             public void onClick(View view) {
                 if(quantity_txt.getText().toString().isEmpty()||datepicker.getText().toString().isEmpty()){
 
-                    textView.setText("please fill all fields");
+                    textView.setText("please fill all fields!");
                 }else{
                     if(intChecker.Checker(quantity_txt.getText().toString())){
                         textView.setText("");
                     }else{
-                        textView.setText("quantity should be in number format");
+                        textView.setText("quantity should be in number format!");
                     }
                 }
 

@@ -31,13 +31,10 @@ public class SalesTableActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     RecyclerView.LayoutManager layoutManager;
     SalesTableAdapter salesTableAdapter;
-    TableLayout tableLayout;
     LinearLayout tableRow;
     android.support.v7.widget.Toolbar toolbar;
     CollapsingToolbarLayout collapsingToolbarLayout;
     String intentFragment;
-    MenuItem menuItem;
-    MainActivity mainActivity;
     ArrayList<SalesRow> salesRows = new ArrayList<>();
     EditText sn,product_name,quantity,amount,date;
 

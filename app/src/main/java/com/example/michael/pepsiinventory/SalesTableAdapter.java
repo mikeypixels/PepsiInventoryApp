@@ -35,6 +35,7 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
     Button editButton, deleteButton, saveButton, cancelButton;
     EditText pName, qtty, amt, dateV;
     TextView sNo;
+    int j = 0;
 
     public interface OnItemClickListener {
         void onItemClick(int position);
@@ -122,15 +123,15 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
             salesViewHolder.date.setTextColor(Color.parseColor("#000000"));
             salesViewHolder.date.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
 
-            salesViewHolder.no.setText(salesRowArrayList.get(i).getSn());
-            salesViewHolder.product_name.setText(salesRowArrayList.get(i).getProduct_name());
-            salesViewHolder.quantity.setText(salesRowArrayList.get(i).getQuantity());
-            salesViewHolder.amount.setText(salesRowArrayList.get(i).getAmount());
+            salesViewHolder.no.setText(salesRowArrayList.get(i-1).getSn());
+            salesViewHolder.product_name.setText(salesRowArrayList.get(i-1).getProduct_name());
+            salesViewHolder.quantity.setText(salesRowArrayList.get(i-1).getQuantity());
+            salesViewHolder.amount.setText(salesRowArrayList.get(i-1).getAmount());
             salesViewHolder.amount.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_END);
-            salesViewHolder.date.setText(salesRowArrayList.get(i).getDate());
+            salesViewHolder.date.setText(salesRowArrayList.get(i-1).getDate());
             salesViewHolder.date.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_END);
 
-            final SalesRow salesRow = salesRowArrayList.get(i);
+            final SalesRow salesRow = salesRowArrayList.get(i-1);
 
             salesViewHolder.tableRow.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -202,6 +203,13 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
                         }
                     });
 
+                    deleteButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+
+                        }
+                    });
+
 
                 }
             });
@@ -213,6 +221,6 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
 
     @Override
     public int getItemCount() {
-        return 45;
+        return salesRowArrayList.size()+1;
     }
 }
