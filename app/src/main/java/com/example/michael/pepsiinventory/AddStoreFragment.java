@@ -1,17 +1,17 @@
 package com.example.michael.pepsiinventory;
 
-import android.app.Activity;
+
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.view.animation.AnimationUtils;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -29,77 +29,83 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 
-public class LoginActivity extends Activity {
 
+/**
+ * A simple {@link Fragment} subclass.
+ */
+public class AddStoreFragment extends Fragment {
+
+    EditText storeName,location;
     Button button;
-    String login_url, username, password;
-    EditText usernameEdit, passwordEdit;
+    TextView textView;
+    String store_url,storename,locationname;
+
+    public AddStoreFragment() {
+        // Required empty public constructor
+    }
+
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        View view = inflater.inflate(R.layout.fragment_add_store, container, false);
 
-        button = findViewById(R.id.submit);
-        usernameEdit = findViewById(R.id.username);
-        passwordEdit = findViewById(R.id.password);
+        storeName = view.findViewById(R.id.store_name);
+        location = view.findViewById(R.id.location);
 
-        login_url = getString(R.string.serve_url) + "login.php";
+        button = view.findViewById(R.id.send2);
+        textView = view.findViewById(R.id.action_store);
+
+        store_url = getString(R.string.serve_url) + "add_store.php";
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                username = usernameEdit.getText().toString();
-                password = passwordEdit.getText().toString();
-                if (username.isEmpty() || password.isEmpty())
-                    Toast.makeText(LoginActivity.this, "Please fill all fields!", Toast.LENGTH_SHORT).show();
+                storename = storeName.getText().toString();
+                locationname = location.getText().toString();
+                if(storename.isEmpty()||locationname.isEmpty())
+                    textView.setText("please fill the field!");
                 else {
+                    textView.setText("");
                     if (isOnline()) {
-                        new LoginTask(LoginActivity.this).execute(username, password);
+                        new AddStoreTask(getContext()).execute(storename, locationname);
                     } else {
-                        Toast.makeText(LoginActivity.this, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
                     }
                 }
-
             }
         });
+
+        return view;
     }
 
-    public class LoginTask extends AsyncTask<String, Void, String> {
+    public class AddStoreTask extends AsyncTask<String, Void, String> {
 
-        Context context;
         ProgressDialog dialog;
-        String TAG = LoginTask.class.getSimpleName();
+        Context context;
+        String TAG = AddStoreFragment.class.getSimpleName();
 
-        public LoginTask(Context ctx) {
-            context = ctx;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            dialog = new ProgressDialog(context);
-            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            dialog.setMessage("Loading. Please wait...");
-            dialog.setIndeterminate(true);
-            dialog.setCanceledOnTouchOutside(false);
-            dialog.show();
+        public AddStoreTask(Context ctx){
+            this.context = ctx;
         }
 
         @Override
         protected String doInBackground(String... strings) {
-            String login_name = strings[0];
-            String login_pass = strings[1];
+
+            String store_name = strings[0];
+            String location_name = strings[1];
 
             try {
-                URL url = new URL(login_url);
+                URL url = new URL(store_url);
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
                 httpURLConnection.setRequestMethod("POST");
                 httpURLConnection.setDoInput(true);
                 httpURLConnection.setDoOutput(true);
                 OutputStream outputStream = httpURLConnection.getOutputStream();
                 BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
-                String data = URLEncoder.encode("username", "UTF-8") + "=" + URLEncoder.encode(login_name, "UTF-8") + "&" +
-                        URLEncoder.encode("password", "UTF-8") + "=" + URLEncoder.encode(login_pass, "UTF-8");
+                String data = URLEncoder.encode("storename", "UTF-8") + "=" + URLEncoder.encode(store_name, "UTF-8") + "&" +
+                        URLEncoder.encode("location", "UTF-8") + "=" + URLEncoder.encode(location_name, "UTF-8");
                 bufferedWriter.write(data);
                 bufferedWriter.flush();
                 bufferedWriter.close();
@@ -132,35 +138,20 @@ public class LoginActivity extends Activity {
             if (result != null)
             {
                 if (result.contains("Successful")) {
-                    String[] userDetails = result.split("-");
-                    Intent intent = new Intent(context, MainActivity.class);
-                    intent.putExtra("name", userDetails[1]);
-                    intent.putExtra("role", userDetails[2]);
-                    intent.putExtra("status", userDetails[3]);
-                    intent.putExtra("user_id", userDetails[4]);
-                    startActivity(intent);
+                    Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
 //                    SlideAnimationUtil.slideOutToLeft(LoginActivity.this, v.getRootView());
-                    finish();
                 } else {
-                    if (this.dialog != null) {
-                        this.dialog.dismiss();
-                    }
-                    Toast.makeText(context, "Oops... Wrong username or password", Toast.LENGTH_LONG).show();
+                    Toast.makeText(context, "adding was unsuccessful", Toast.LENGTH_LONG).show();
                 }
             } else
-
             {
-                if (this.dialog != null) {
-                    this.dialog.dismiss();
-                }
                 Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
             }
         }
-
     }
 
     protected boolean isOnline() {
-        ConnectivityManager cm = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager cm = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
         if (netInfo != null && netInfo.isConnectedOrConnecting()) {
             return true;
@@ -168,4 +159,5 @@ public class LoginActivity extends Activity {
             return false;
         }
     }
+
 }

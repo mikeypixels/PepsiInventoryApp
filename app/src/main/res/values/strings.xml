@@ -44,6 +44,11 @@
         <item>worker</item>
     </string-array>
 
+    <string name="serve_url">
+        http://192.168.43.174/pepsi/
+    </string>
+
+
     <string name="activity_title_about_us">About Us</string>
     <string name="activity_title_privacy_policy">Privacy Policy</string>
     <string name="action_clear_all">Clear All</string>
