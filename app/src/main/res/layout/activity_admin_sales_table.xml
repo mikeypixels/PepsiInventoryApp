@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ExpenseTableActivity">
+    tools:context=".AdminSalesTableActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -29,9 +29,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:titleTextColor="@color/colorWhite"
-                app:popupTheme="@style/ThemeOverlay.AppCompat.Dark"
-                app:title="Expenses"
-                app:titleTextAppearance="@color/colorWhite"/>
+                app:popupTheme="@style/AppTheme"
+                app:title="Sales"
+                app:titleTextAppearance="@color/colorWhite">
+
+            </android.support.v7.widget.Toolbar>
 
             <android.support.constraint.ConstraintLayout
                 android:layout_width="match_parent"
@@ -51,7 +53,7 @@
     </android.support.design.widget.AppBarLayout>
 
     <!--<Spinner-->
-        <!--android:id="@+id/spinner1"-->
+        <!--android:id="@+id/spinner2"-->
         <!--android:layout_width="130dp"-->
         <!--android:layout_height="30dp"-->
         <!--android:layout_gravity="center_horizontal"-->
@@ -59,7 +61,7 @@
         <!--android:layout_marginTop="12dp"/>-->
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/recyclerView"
+        android:id="@+id/recyclerView1"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">

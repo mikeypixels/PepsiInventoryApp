@@ -6,14 +6,15 @@ import android.widget.TableRow;
 
 public class SalesRow {
 
-    String sn, product_name, quantity, amount, date;
+    String sn, product_name, quantity, amount, date,store_id;
 
-    public SalesRow(String sn, String product_name, String quantity, String amount, String date) {
+    public SalesRow(String sn, String product_name, String quantity, String amount, String date,String store_id) {
         this.sn = sn;
         this.product_name = product_name;
         this.quantity = quantity;
         this.amount = amount;
         this.date = date;
+        this.store_id = store_id;
     }
 
     public String getSn() {
@@ -54,5 +55,13 @@ public class SalesRow {
 
     public void setDate(String date) {
         this.date = date;
+    }
+
+    public String getStore_id() {
+        return store_id;
+    }
+
+    public void setStore_id(String store_id) {
+        this.store_id = store_id;
     }
 }

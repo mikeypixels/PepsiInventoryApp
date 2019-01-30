@@ -53,7 +53,7 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
     @NonNull
     @Override
     public UserListTableAdapter.UserListViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        return new UserListTableAdapter.UserListViewHolder(LayoutInflater.from(context).inflate(R.layout.sales_table_layout,null));
+        return new UserListTableAdapter.UserListViewHolder(LayoutInflater.from(context).inflate(R.layout.user_list_layout,null));
     }
 
     @Override

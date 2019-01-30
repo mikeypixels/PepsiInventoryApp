@@ -1,18 +1,29 @@
 package com.example.michael.pepsiinventory;
 
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 
@@ -23,11 +34,11 @@ public class StoreListTableAdapter extends RecyclerView.Adapter<StoreListTableAd
     TextView store_id,store_name,location;
     TextView st_id,st_name,loc;
     Button edit_btn,delete_btn,save_btn,cancel_btn;
-    int j = 0;
+    Spinner spinner;
 
-    public StoreListTableAdapter(Context context, ArrayList<Store> storeList) {
+    public StoreListTableAdapter(Context context,ArrayList<Store> arrayList) {
         this.context = context;
-        storeRowArrayList = storeList;
+        this.storeRowArrayList = arrayList;
     }
 
     public static class StoreListViewHolder extends RecyclerView.ViewHolder{
@@ -57,11 +68,9 @@ public class StoreListTableAdapter extends RecyclerView.Adapter<StoreListTableAd
         if(i==0){
             storeListViewHolder.tableRow.setBackgroundColor(Color.parseColor("#222F48"));
             storeListViewHolder.tableRow.setPadding(13, 13, 13, 13);
-//            expenseViewHolder.tableRow.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
             storeListViewHolder.store_id.setText("ST/#");
             storeListViewHolder.store_id.setTextColor(Color.parseColor("#ffffff"));
             storeListViewHolder.store_name.setText("store name");
-            storeListViewHolder.store_name.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
             storeListViewHolder.store_name.setTextColor(Color.parseColor("#ffffff"));
             storeListViewHolder.location.setText("location");
             storeListViewHolder.location.setTextColor(Color.parseColor("#ffffff"));
@@ -69,10 +78,8 @@ public class StoreListTableAdapter extends RecyclerView.Adapter<StoreListTableAd
         }else if(i>0){
             storeListViewHolder.tableRow.setBackgroundColor(Color.parseColor("#efefef"));
             storeListViewHolder.tableRow.setPadding(13, 13, 13, 13);
-//            expenseViewHolder.tableRow.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
             storeListViewHolder.store_id.setTextColor(Color.parseColor("#000000"));
             storeListViewHolder.store_name.setTextColor(Color.parseColor("#000000"));
-            storeListViewHolder.store_name.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
             storeListViewHolder.location.setTextColor(Color.parseColor("#000000"));
 
 //            Log.d(TAG, "value" + i);
@@ -165,4 +172,6 @@ public class StoreListTableAdapter extends RecyclerView.Adapter<StoreListTableAd
     public int getItemCount() {
         return storeRowArrayList.size()+1;
     }
+
+
 }

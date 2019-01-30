@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_view_users"
+        android:orderInCategory="100"
+        android:title="@string/action_view_users"
+        app:showAsAction="never" />
 
     <item
-        android:id="@+id/action_change_passwd"
+        android:id="@+id/action_view_stores"
         android:orderInCategory="100"
-        android:title="@string/action_change_passwd"
-        app:showAsAction="never"/>
-
-    <item
-        android:id="@+id/action_logout"
-        android:orderInCategory="100"
-        android:title="@string/action_logout"
+        android:title="@string/action_view_stores"
         app:showAsAction="never"/>
 
 </menu>

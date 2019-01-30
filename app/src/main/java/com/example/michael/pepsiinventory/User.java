@@ -2,14 +2,15 @@ package com.example.michael.pepsiinventory;
 
 public class User {
 
-    String user_id,f_name,l_name,role,status;
+    String user_id,f_name,l_name,role,status,store_id;
 
-    public User(String user_id, String f_name, String l_name, String role, String status) {
+    public User(String user_id, String f_name, String l_name, String role, String status, String store_id) {
         this.user_id = user_id;
         this.f_name = f_name;
         this.l_name = l_name;
         this.role = role;
         this.status = status;
+        this.store_id = store_id;
     }
 
     public String getUser_id() {
@@ -50,5 +51,13 @@ public class User {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getStore_id() {
+        return store_id;
+    }
+
+    public void setStore_id(String store_id) {
+        this.store_id = store_id;
     }
 }

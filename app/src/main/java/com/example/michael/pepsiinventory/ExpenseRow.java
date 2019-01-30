@@ -1,14 +1,15 @@
 package com.example.michael.pepsiinventory;
 
 public class ExpenseRow {
-    String no,expense_name,description,amount,date;
+    String no,expense_name,description,amount,date,store_id;
 
-    public ExpenseRow(String no, String expense_name, String amount, String description, String date) {
+    public ExpenseRow(String no, String expense_name, String amount, String description, String date, String store_id) {
         this.no = no;
         this.expense_name = expense_name;
         this.amount = amount;
         this.description = description;
         this.date = date;
+        this.store_id = store_id;
     }
 
     public String getDescription() {
@@ -49,5 +50,13 @@ public class ExpenseRow {
 
     public void setDate(String date) {
         this.date = date;
+    }
+
+    public String getStore_id() {
+        return store_id;
+    }
+
+    public void setStore_id(String store_id) {
+        this.store_id = store_id;
     }
 }

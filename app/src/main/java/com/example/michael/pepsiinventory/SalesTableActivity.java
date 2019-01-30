@@ -1,7 +1,10 @@
 package com.example.michael.pepsiinventory;
 
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -17,10 +20,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.SearchView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 
@@ -34,7 +42,8 @@ public class SalesTableActivity extends AppCompatActivity {
     LinearLayout tableRow;
     android.support.v7.widget.Toolbar toolbar;
     CollapsingToolbarLayout collapsingToolbarLayout;
-    String intentFragment;
+    String intentFragment,sales_url;
+    ArrayList<SalesRow> salesRowArrayList = new ArrayList<>();
     ArrayList<SalesRow> salesRows = new ArrayList<>();
     EditText sn,product_name,quantity,amount,date;
 
@@ -55,6 +64,8 @@ public class SalesTableActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbar);
         collapsingToolbarLayout = findViewById(R.id.collapsingToolbar);
 
+        sales_url = getString(R.string.serve_url) + "sales.php";
+
         toolbar.setNavigationIcon(getResources().getDrawable(R.drawable.ic_arrow_back));
 
         setSupportActionBar(toolbar);
@@ -67,15 +78,13 @@ public class SalesTableActivity extends AppCompatActivity {
             }
         });
 
-        salesRows = getList();
-
         recyclerView = findViewById(R.id.recyclerView);
         layoutManager = new LinearLayoutManager(getApplicationContext());
 
         recyclerView.setLayoutManager(layoutManager);
 //        salesRows.add(salesTableAdapter.)
 
-        salesTableAdapter = new SalesTableAdapter(SalesTableActivity.this,salesRows);
+        salesTableAdapter = new SalesTableAdapter(SalesTableActivity.this,salesRowArrayList);
         recyclerView.setAdapter(salesTableAdapter);
 
 //        salesTableAdapter.setOnItemClickListener(new SalesTableAdapter.OnItemClickListener() {
@@ -87,23 +96,142 @@ public class SalesTableActivity extends AppCompatActivity {
 //            }
 //        });
 
-        Log.d(TAG,"OnReceive : " + salesRows.get(0).getAmount());
+        new SalesLoadingTask(SalesTableActivity.this).execute();
     }
 
-    public ArrayList<SalesRow> getList(){
-        ArrayList<SalesRow> arrayList = new ArrayList<>();
+    public class SalesLoadingTask extends AsyncTask<Void, Void, String> {
 
-        for(int i=0; i<45 ; i++){
-            arrayList.add(i,new SalesRow("1","Crate","15","185,000","10/01/2019"));
+        Context context;
+        ProgressDialog dialog;
+//        String TAG = LoginActivity.LoginTask.class.getSimpleName();
+
+        public SalesLoadingTask(Context ctx) {
+            context = ctx;
         }
 
-        return arrayList;
+        @Override
+        protected void onPreExecute() {
+            dialog = new ProgressDialog(context);
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            dialog.setMessage("Loading. Please wait...");
+            dialog.setIndeterminate(true);
+            dialog.setCanceledOnTouchOutside(false);
+            dialog.show();
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            HttpHandler httpHandler = new HttpHandler();
+            return httpHandler.makeServiceCall(sales_url);
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+//            Log.d(TAG, "onPostExecute: " + result);
+
+            if (result != null) {
+
+                try {
+                    JSONObject jsonObject = new JSONObject(result);
+                    JSONArray jsonArray = jsonObject.getJSONArray("sales");
+
+                    if (jsonArray.length() > 0) {
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            salesRowArrayList.add(new SalesRow(jsonArray.getJSONObject(i).getString("id"),
+                                    jsonArray.getJSONObject(i).getString("product"),
+                                    jsonArray.getJSONObject(i).getString("quantity"),
+                                    jsonArray.getJSONObject(i).getString("amount"),
+                                    jsonArray.getJSONObject(i).getString("date"),
+                                    jsonArray.getJSONObject(i).getString("store_id")));
+//                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("id"),jsonArray.getJSONObject(i).getString("name"),jsonArray.getJSONObject(i).getString("location")));
+                        }
+
+                        salesTableAdapter = new SalesTableAdapter(SalesTableActivity.this,salesRowArrayList);
+                        recyclerView.setAdapter(salesTableAdapter);
+
+                        if (this.dialog != null) {
+                            this.dialog.dismiss();
+                        }
+
+                    } else {
+                        if (this.dialog != null) {
+                            this.dialog.dismiss();
+                        }
+                        Toast.makeText(context, "Oops... No sales found!", Toast.LENGTH_LONG).show();
+                    }
+
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(context, "Oops... Something went wrong!", Toast.LENGTH_LONG).show();
+                    if (this.dialog != null) {
+                        this.dialog.dismiss();
+                    }
+                }
+
+            } else {
+                if (this.dialog != null) {
+                    this.dialog.dismiss();
+                }
+                Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
+            }
+        }
+
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main, menu);
+        inflater.inflate(R.menu.more_items_main, menu);
+        MenuItem menuItem = menu.findItem(R.id.action_search);
+        final SearchView searchView = (SearchView) menuItem.getActionView();
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+
+                if (!salesRows.isEmpty())
+                    salesRows.clear();
+
+                for (int i = 0; i < salesRowArrayList.size(); i++) {
+                    if (salesRowArrayList.get(i).getSn().toLowerCase().contains(query.toLowerCase())||salesRowArrayList.get(i).getProduct_name().toLowerCase().contains(query.toLowerCase())||
+                            salesRowArrayList.get(i).getQuantity().toLowerCase().contains(query.toLowerCase())||salesRowArrayList.get(i).getAmount().toLowerCase().contains(query.toLowerCase())||
+                            salesRowArrayList.get(i).getDate().toLowerCase().contains(query.toLowerCase())) {
+                        salesRows.add(new SalesRow(salesRowArrayList.get(i).getSn(),salesRowArrayList.get(i).getProduct_name(), salesRowArrayList.get(i).getQuantity(),salesRowArrayList.get(i).getAmount(),
+                                salesRowArrayList.get(i).getDate(),salesRowArrayList.get(i).getStore_id()));
+                    }
+                }
+
+                salesTableAdapter = new SalesTableAdapter(SalesTableActivity.this, salesRows);
+                recyclerView.setAdapter(salesTableAdapter);
+                salesTableAdapter.notifyDataSetChanged();
+
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+
+                if (!salesRows.isEmpty())
+                    salesRows.clear();
+
+                for (int i = 0; i < salesRowArrayList.size(); i++) {
+                    if (salesRowArrayList.get(i).getSn().toLowerCase().contains(newText.toLowerCase())||salesRowArrayList.get(i).getProduct_name().toLowerCase().contains(newText.toLowerCase())||
+                            salesRowArrayList.get(i).getQuantity().toLowerCase().contains(newText.toLowerCase())||salesRowArrayList.get(i).getAmount().toLowerCase().contains(newText.toLowerCase())||
+                            salesRowArrayList.get(i).getDate().toLowerCase().contains(newText.toLowerCase())) {
+                        salesRows.add(new SalesRow(salesRowArrayList.get(i).getSn(),salesRowArrayList.get(i).getProduct_name(), salesRowArrayList.get(i).getQuantity(),salesRowArrayList.get(i).getAmount(),
+                                salesRowArrayList.get(i).getDate(),salesRowArrayList.get(i).getStore_id()));
+                    }
+                }
+
+                salesTableAdapter = new SalesTableAdapter(SalesTableActivity.this, salesRows);
+                recyclerView.setAdapter(salesTableAdapter);
+                salesTableAdapter.notifyDataSetChanged();
+
+                return false;
+            }
+        });
+
         return true;
     }
 

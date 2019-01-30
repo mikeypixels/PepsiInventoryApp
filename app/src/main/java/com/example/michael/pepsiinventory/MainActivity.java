@@ -1,7 +1,9 @@
 package com.example.michael.pepsiinventory;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -13,10 +15,12 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import cn.carbs.android.avatarimageview.library.AvatarImageView;
@@ -30,6 +34,10 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imgNavHeaderBg;
     private ViewPager viewPager;
     AvatarImageView img_profile;
+    TextView textView;
+    String f_name,l_name,firstName,lastName;
+    String TAG = MainActivity.class.getSimpleName();
+    LoginActivity loginActivity;
 
     private SectionsPageAdapter sectionsPageAdapter;
 
@@ -43,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
     // flag to load home fragment when user presses back key
     private boolean shouldLoadHomeFragOnBackPress = true;
     private Handler mHandler;
+    String store_id,user_id;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,12 +60,15 @@ public class MainActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        store_id = getIntent().getStringExtra("store_id");
+        user_id = getIntent().getStringExtra("user_id");
+
         mHandler = new Handler();
 
         drawer = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.nav_view);
         viewPager = findViewById(R.id.container);
-        setupViewPager(viewPager);
+        setupViewPager(viewPager,user_id,store_id);
 
         TabLayout tabLayout = findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
@@ -65,9 +77,14 @@ public class MainActivity extends AppCompatActivity {
         navHeader = navigationView.getHeaderView(0);
         imgNavHeaderBg = navHeader.findViewById(R.id.img_header_bg);
         img_profile = navHeader.findViewById(R.id.img_profile);
+        textView = navHeader.findViewById(R.id.full_name);
 
         // load nav menu header data
         loadNavHeader();
+
+        final SharedPreferences myPrefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+
+        textView.setText(myPrefs.getString("first_name","").concat(" " + myPrefs.getString("last_name","")));
 
         // initializing navigation menu
         setUpNavigationView();
@@ -79,18 +96,46 @@ public class MainActivity extends AppCompatActivity {
 //        }
     }
 
-    private void setupViewPager(ViewPager viewPager){
+    private void setupViewPager(ViewPager viewPager,String user_id, String store_id){
+
+        String TAG = MainActivity.class.getSimpleName();
+
         String title1 = "Sales";
+
+        Log.d(TAG,"OnReceive: " + user_id);
+
+        SalesFragment salesFragment = new SalesFragment();
+        salesFragment.getStoreUserId(store_id,user_id);
+
+        ExpenseFragment expenseFragment = new ExpenseFragment();
+        expenseFragment.getStoreUserId(store_id,user_id);
+
+        AdminSalesFragment adminSalesFragment = new AdminSalesFragment();
+        adminSalesFragment.getStoreUserId(store_id,user_id);
+
+        AdminExpenseFragment adminExpenseFragment = new AdminExpenseFragment();
+        adminExpenseFragment.getStoreUserId(store_id,user_id);
+
         SectionsPageAdapter adapter = new SectionsPageAdapter(getSupportFragmentManager());
-        adapter.addFragment(new SalesFragment(), "Sales");
-        adapter.addFragment(new ExpenseFragment(), "Expenses");
-        viewPager.setAdapter(adapter);
+
+        final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+
+        if(sharedPreferences.getString("role","").equals("Main Admin")||sharedPreferences.getString("role","").equals("Admin")){
+            adapter.addFragment(adminSalesFragment, "Sales");
+            adapter.addFragment(adminExpenseFragment, "Expenses");
+            viewPager.setAdapter(adapter);
+        }else if(sharedPreferences.getString("role","").equals("Worker")){
+            adapter.addFragment(salesFragment, "Sales");
+            adapter.addFragment(expenseFragment, "Expenses");
+            viewPager.setAdapter(adapter);
+        }
+
     }
 
     private void loadNavHeader() {
-
         // loading header background image
         imgNavHeaderBg.setImageDrawable(getResources().getDrawable(R.drawable.bg));
+
     }
 
     private void selectNavMenu() {
@@ -127,9 +172,13 @@ public class MainActivity extends AppCompatActivity {
                         drawer.closeDrawers();
                         break;
                     case R.id.nav_admin_panel:
-                        Intent intent2 = new Intent(MainActivity.this,AdminActivity.class);
-                        startActivity(intent2);
-                        drawer.closeDrawers();
+                        final SharedPreferences mpreferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+                        if(mpreferences.getString("role","").equals("Main Admin")|| mpreferences.getString("role","").equals("Admin")) {
+                            Intent intent2 = new Intent(MainActivity.this, AdminActivity.class);
+                            startActivity(intent2);
+                            drawer.closeDrawers();
+                        }else
+                            menuItem.setChecked(false);
                         break;
                     case R.id.nav_settings:
                         Intent intent3 = new Intent(MainActivity.this,SettingsPrefActivity.class);
@@ -233,10 +282,10 @@ public class MainActivity extends AppCompatActivity {
         switch (navItemIndex) {
             case 0:
                 // home
-                SalesFragment homeFragment = new SalesFragment();
+                AdminSalesFragment homeFragment = new AdminSalesFragment();
                 return homeFragment;
             default:
-                return new SalesFragment();
+                return new AdminSalesFragment();
         }
     }
 
@@ -279,6 +328,10 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+//    public User getUser(User user){
+//        return user;
+//    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -299,4 +352,5 @@ public class MainActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+
 }

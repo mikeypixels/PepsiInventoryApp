@@ -4,9 +4,11 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -34,6 +36,8 @@ public class LoginActivity extends Activity {
     Button button;
     String login_url, username, password;
     EditText usernameEdit, passwordEdit;
+    SharedPreferences myPrefs;
+    MainActivity mainActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,13 +138,27 @@ public class LoginActivity extends Activity {
                 if (result.contains("Successful")) {
                     String[] userDetails = result.split("-");
                     Intent intent = new Intent(context, MainActivity.class);
-                    intent.putExtra("name", userDetails[1]);
-                    intent.putExtra("role", userDetails[2]);
-                    intent.putExtra("status", userDetails[3]);
-                    intent.putExtra("user_id", userDetails[4]);
+                    intent.putExtra("f_name", userDetails[1]);
+                    intent.putExtra("l_name", userDetails[2]);
+                    intent.putExtra("role", userDetails[3]);
+                    intent.putExtra("status", userDetails[4]);
+                    intent.putExtra("user_id", userDetails[5]);
+                    intent.putExtra("store_id", userDetails[6]);
                     startActivity(intent);
 //                    SlideAnimationUtil.slideOutToLeft(LoginActivity.this, v.getRootView());
                     finish();
+
+                    Bundle extras = getIntent().getExtras();
+
+                    myPrefs = PreferenceManager.getDefaultSharedPreferences(LoginActivity.this);
+
+                    SharedPreferences.Editor editor = myPrefs.edit();
+                    editor.putString("first_name",userDetails[1]);
+                    editor.putString("last_name",userDetails[2]);
+                    editor.putString("role",userDetails[3]);
+
+                    editor.apply();
+
                 } else {
                     if (this.dialog != null) {
                         this.dialog.dismiss();

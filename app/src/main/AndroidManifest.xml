@@ -29,12 +29,6 @@
             android:name=".SettingsPrefActivity"
             android:label="Settings"
             android:theme="@style/SettingsTheme" />
-        <activity
-            android:name=".PopUpActivity"
-            android:theme="@style/AppTheme.CustomTheme" />
-        <activity
-            android:name=".PopUpActivity2"
-            android:theme="@style/AppTheme.CustomTheme" />
         <activity android:name=".MainActivity" />
         <activity android:name=".AdminSalesTableActivity" />
         <activity android:name=".AdminExpenseTableActivity" />

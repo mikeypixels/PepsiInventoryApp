@@ -31,17 +31,17 @@
         <item>Settings</item>
     </string-array>
 
-    <string-array name="stores">
+    <string-array name="products">
         <item>select product</item>
         <item>Crate</item>
-        <item>Full Shell</item>
+        <item>Full shell</item>
         <item>Bottle</item>
     </string-array>
 
     <string-array name="role">
         <item>select role</item>
-        <item>admin</item>
-        <item>worker</item>
+        <item>Admin</item>
+        <item>Worker</item>
     </string-array>
 
     <string name="serve_url">
@@ -53,6 +53,9 @@
     <string name="activity_title_privacy_policy">Privacy Policy</string>
     <string name="action_clear_all">Clear All</string>
     <string name="action_logout">Logout</string>
+    <string name="action_search">search</string>
+    <string name="action_spinner">spinner</string>
+    <string name="action_change_passwd">Change password</string>
     <string name="action_view_users">View Users</string>
     <string name="action_view_stores">View Stores</string>
     <string name="action_mark_all_read">Mark All as Read</string>

@@ -91,6 +91,16 @@ public class AddStoreFragment extends Fragment {
         }
 
         @Override
+        protected void onPreExecute() {
+            dialog = new ProgressDialog(context);
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            dialog.setMessage("Loading. Please wait...");
+            dialog.setIndeterminate(true);
+            dialog.setCanceledOnTouchOutside(false);
+            dialog.show();
+        }
+
+        @Override
         protected String doInBackground(String... strings) {
 
             String store_name = strings[0];
@@ -139,12 +149,19 @@ public class AddStoreFragment extends Fragment {
             {
                 if (result.contains("Successful")) {
                     Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
+                    storeName.setText("");
+                    location.setText("");
+                    dialog.dismiss();
 //                    SlideAnimationUtil.slideOutToLeft(LoginActivity.this, v.getRootView());
                 } else {
+                    if(this.dialog != null)
+                        dialog.dismiss();
                     Toast.makeText(context, "adding was unsuccessful", Toast.LENGTH_LONG).show();
                 }
             } else
             {
+                if(this.dialog != null)
+                    dialog.dismiss();
                 Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
             }
         }

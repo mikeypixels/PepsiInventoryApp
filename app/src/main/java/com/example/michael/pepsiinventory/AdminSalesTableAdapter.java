@@ -23,12 +23,12 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
     Context context;
     private SalesTableAdapter.OnItemClickListener mListener;
     private ArrayList<SalesRow> salesRowArrayList;
+    private ArrayList<SalesRow> salesRowArrayListCopy;
     private final static String TAG = SalesTableAdapter.class.getSimpleName();
     TextView sn, product, quant, amnt, datepick;
     Button editButton, deleteButton, saveButton, cancelButton;
     EditText pName, qtty, amt, dateV;
     TextView sNo;
-    int j = 0;
 
     public interface OnItemClickListener {
         void onItemClick(int position);
@@ -41,6 +41,7 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
     public AdminSalesTableAdapter(Context context, ArrayList<SalesRow> salesRows) {
         this.context = context;
         salesRowArrayList = salesRows;
+        salesRowArrayListCopy = salesRows;
     }
 
     public static class AdminSalesViewHolder extends RecyclerView.ViewHolder {
@@ -88,17 +89,13 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
             salesViewHolder.no.setText("S/N");
             salesViewHolder.no.setTextColor(Color.parseColor("#ffffff"));
             salesViewHolder.product_name.setText("product");
-            salesViewHolder.product_name.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
             salesViewHolder.product_name.setTextColor(Color.parseColor("#ffffff"));
             salesViewHolder.quantity.setText("quantity");
             salesViewHolder.quantity.setTextColor(Color.parseColor("#ffffff"));
-            salesViewHolder.quantity.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
             salesViewHolder.amount.setText("amount");
             salesViewHolder.amount.setTextColor(Color.parseColor("#ffffff"));
-            salesViewHolder.amount.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
             salesViewHolder.date.setText("sales date");
             salesViewHolder.date.setTextColor(Color.parseColor("#ffffff"));
-            salesViewHolder.date.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
 
         } else {
 
@@ -106,15 +103,18 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
 
             salesViewHolder.tableRow.setBackgroundColor(Color.parseColor("#efefef"));
             salesViewHolder.no.setTextColor(Color.parseColor("#000000"));
-            salesViewHolder.product_name.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
             salesViewHolder.product_name.setPadding(4,0,0,0);
             salesViewHolder.product_name.setTextColor(Color.parseColor("#000000"));
             salesViewHolder.quantity.setTextColor(Color.parseColor("#000000"));
-            salesViewHolder.quantity.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
             salesViewHolder.amount.setTextColor(Color.parseColor("#000000"));
-            salesViewHolder.amount.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
             salesViewHolder.date.setTextColor(Color.parseColor("#000000"));
-            salesViewHolder.date.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+
+            if(salesRowArrayList.get(i-1).getProduct_name().equals("1")||salesRowArrayList.get(i-1).getProduct_name().equals("Crate"))
+                salesRowArrayList.get(i-1).setProduct_name("Crate");
+            else if(salesRowArrayList.get(i-1).getProduct_name().equals("2")||salesRowArrayList.get(i-1).getProduct_name().equals("Full shell"))
+                salesRowArrayList.get(i-1).setProduct_name("Full shell");
+            else if(salesRowArrayList.get(i-1).getProduct_name().equals("3")||salesRowArrayList.get(i-1).getProduct_name().equals("Bottle"))
+                salesRowArrayList.get(i-1).setProduct_name("Bottle");
 
             salesViewHolder.no.setText(salesRowArrayList.get(i-1).getSn());
             salesViewHolder.product_name.setText(salesRowArrayList.get(i-1).getProduct_name());
@@ -212,4 +212,25 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
     public int getItemCount() {
         return salesRowArrayList.size()+1;
     }
+
+    public void filter(String text){
+        salesRowArrayList.clear();
+
+        if(text.isEmpty()){
+            salesRowArrayList.addAll(salesRowArrayListCopy);
+        }else{
+            text = text.toLowerCase();
+            for(SalesRow item: salesRowArrayListCopy){
+                if(item.getSn().toLowerCase().contains(text)||item.getProduct_name().toLowerCase().contains(text)||item.getQuantity().toLowerCase().contains(text)||item.getAmount().toLowerCase().contains(text)
+                        ||item.getDate().toLowerCase().contains(text)){
+                    salesRowArrayList.add(item);
+                    Log.d(TAG,"OnReceivedItem: " + item.getProduct_name());
+                }
+            }
+        }
+
+        notifyDataSetChanged();
+
+    }
+
 }
