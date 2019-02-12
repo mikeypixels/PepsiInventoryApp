@@ -4,8 +4,10 @@ package com.example.michael.pepsiinventory;
 import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -28,6 +30,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
@@ -91,17 +95,22 @@ public class ExpenseFragment extends Fragment {
             @Override
             public void onClick(View view) {
 
+                final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext().getApplicationContext());
+
+                String myFormat = "yyyy-mm-dd";
+                SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.getDefault());
+
                 Log.d(TAG, "onReceiving: " + datepicker.getText().toString());
                     if (amount.getText().toString().isEmpty() || name.getText().toString().isEmpty() || datepicker.getText().toString().isEmpty()) {
                         action_bar.setText("please fill all fields!");
                     } else {
-                        if (intChecker.Checker(amount.getText().toString())) {
+                        String[] dateArray = datepicker.getText().toString().split("/");
+                        String databaseDate = dateArray[2].concat("-" + dateArray[1] + "-" + dateArray[0]);
+                        if (intChecker.Checker(amount.getText().toString().replaceAll(",",""))) {
                             action_bar.setText("");
-                            String myFormat = "yyyy-mm-dd";
-                            SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.getDefault());
-                            new AddExpenseTask(getContext()).execute(store_id,sdf.format(myCalendar.getTime()),name.getText().toString(),description.getText().toString(),amount.getText().toString(),user_id);
+                            new AddExpenseTask(getContext()).execute(preferences.getString("store_id", ""),databaseDate,name.getText().toString(),description.getText().toString(),amount.getText().toString().replaceAll(",",""),user_id);
                         } else {
-                            action_bar.setText("amount should be in number format!");
+                            action_bar.setText("amount should be in currency format!");
                         }
                     }
 

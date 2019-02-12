@@ -5,11 +5,13 @@ import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.PorterDuff;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -28,6 +30,10 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -39,9 +45,15 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
+
+import static com.bumptech.glide.gifdecoder.GifHeaderParser.TAG;
 
 
 /**
@@ -57,6 +69,10 @@ public class SalesFragment extends Fragment implements AdapterView.OnItemSelecte
     Button send1;
     final Calendar myCalendar = Calendar.getInstance();
     String sales_url,store_id,user_id;
+    Spinner store_spinner;
+    Spinner spinner;
+    String stock_reducing_url, stock_url;
+    ArrayList<Stock> stockArrayList = new ArrayList<>();
 
     private static final String TAG_HOME = "Sales";
 
@@ -73,9 +89,12 @@ public class SalesFragment extends Fragment implements AdapterView.OnItemSelecte
         quantity_txt = view.findViewById(R.id.quantity_txt);
         send1 = view.findViewById(R.id.send1);
         textView = view.findViewById(R.id.action0);
-        final Spinner spinner = view.findViewById(R.id.spinner);
+        spinner = view.findViewById(R.id.spinner);
+
 
         sales_url = getString(R.string.serve_url) + "add_sales.php";
+        stock_reducing_url = getString(R.string.serve_url) + "stock_update.php";
+        stock_url = getString(R.string.serve_url) + "stocks.php";
 
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(container.getContext(),R.array.products, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -105,6 +124,7 @@ public class SalesFragment extends Fragment implements AdapterView.OnItemSelecte
         send1.setOnClickListener(new View.OnClickListener() {
 
             double cost;
+            final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext().getApplicationContext());
 
             @Override
             public void onClick(View view) {
@@ -113,30 +133,42 @@ public class SalesFragment extends Fragment implements AdapterView.OnItemSelecte
                     if (quantity_txt.getText().toString().isEmpty() || datepicker.getText().toString().isEmpty()) {
                         textView.setText("please fill all fields!");
                     } else {
+
+                        String[] dateArray = datepicker.getText().toString().split("/");
+                        String databaseDate = dateArray[2].concat("-" + dateArray[1] + "-" + dateArray[0]);
+
                         if (intChecker.Checker(quantity_txt.getText().toString())) {
                             textView.setText("");
+
                             String myFormat = "yyyy-mm-dd";
-                            SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.getDefault());
+                            SimpleDateFormat sdf = new SimpleDateFormat(myFormat);
+
+                            Log.d(TAG, "OnReceiveSaleDate: " + sdf.format(myCalendar.getTime()));
                             if (isOnline()) {
                                 if(spinner.getSelectedItem().toString().equals("Crate")) {
+                                    Date date = new Date();
                                     Log.d(TAG,"OnReceive: " + user_id);
                                     cost = Integer.parseInt(quantity_txt.getText().toString())*9800;
-                                    new AddSalesTask(getContext()).execute("1",store_id,quantity_txt.getText().toString(),String.valueOf(cost), sdf.format(myCalendar.getTime()),user_id);
+
+                                    Log.d(TAG, "OnReceiveDate: " + databaseDate);
+                                    new AddSalesTask(getContext()).execute("1",preferences.getString("store_id", ""),quantity_txt.getText().toString(),String.valueOf(cost), databaseDate,preferences.getString("user_id",""));
                                 }else if(spinner.getSelectedItem().toString().equals("Full shell")){
                                     Log.d(TAG,"OnReceive: " + user_id);
                                     cost = Integer.parseInt(quantity_txt.getText().toString())*19800;
-                                    new AddSalesTask(getContext()).execute("2",store_id,quantity_txt.getText().toString(),String.valueOf(cost), sdf.format(myCalendar.getTime()),user_id);
+                                    Log.d(TAG, "OnReceiveDate: " + sdf.format(myCalendar.getTime()));
+                                    new AddSalesTask(getContext()).execute("2",store_id,quantity_txt.getText().toString(),String.valueOf(cost), databaseDate,user_id);
                                 }
                                 else if(spinner.getSelectedItem().toString().equals("Bottle")){
 
                                     cost = Integer.parseInt(quantity_txt.getText().toString())*300;
-                                    new AddSalesTask(getContext()).execute("3",store_id,quantity_txt.getText().toString(),String.valueOf(cost), sdf.format(myCalendar.getTime()),user_id);
+                                    Log.d(TAG, "OnReceiveDate: " + sdf.format(myCalendar.getTime()));
+                                    new AddSalesTask(getContext()).execute("3",store_id,quantity_txt.getText().toString(),String.valueOf(cost), databaseDate,user_id);
                                 }
                             } else {
                                 Toast.makeText(getContext(), "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
                             }
                         } else {
-                            textView.setText("quantity should be in number format!");
+                            textView.setText("quantity should be in currency format!");
                         }
                     }
                 }else{
@@ -231,6 +263,7 @@ public class SalesFragment extends Fragment implements AdapterView.OnItemSelecte
                     String[] userDetails = result.split("-");
                     quantity_txt.setText("");
                     datepicker.setText("");
+                    spinner.setSelection(0);
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
@@ -283,4 +316,5 @@ public class SalesFragment extends Fragment implements AdapterView.OnItemSelecte
             return false;
         }
     }
+
 }

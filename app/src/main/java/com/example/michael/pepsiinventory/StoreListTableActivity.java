@@ -138,6 +138,15 @@ public class StoreListTableActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId()==android.R.id.home)
             finish();
+
+        if (item.getItemId() == R.id.action_logout) {
+            Intent intent = new Intent(StoreListTableActivity.this,LoginActivity.class);
+            startActivity(intent);
+            Toast.makeText(getApplicationContext(), "succesfully logged out!", Toast.LENGTH_SHORT).show();
+            finish();
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 

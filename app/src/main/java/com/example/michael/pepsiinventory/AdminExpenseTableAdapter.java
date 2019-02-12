@@ -1,9 +1,16 @@
 package com.example.michael.pepsiinventory;
 
+import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -12,24 +19,52 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Locale;
 
 public class AdminExpenseTableAdapter extends RecyclerView.Adapter<AdminExpenseTableAdapter.AdminExpenseViewHolder> {
 
     Context context;
-    private ArrayList<ExpenseRow> expenseRowArrayList = new ArrayList<>();
+    private ArrayList<ExpenseRow> expenseRowArrayList;
+    private ArrayList<ExpenseRow> expenseArrayList;
 
     TextView sn, product, description, amnt, datepick;
     Button editButton, deleteButton, saveButton, cancelButton;
-    EditText pName, description0, qtty, amt, dateV;
-    TextView sNo;
-    int j = 0;
-
+    EditText pName, description0, dateV;
+    TextView sNo, amt;
+    String expense_update_url = "http://192.168.43.174/pepsi/expense_update.php";
+    String expense_delete_url = "http://192.168.43.174/pepsi/delete_expense.php";
+    final Calendar myCalendar = Calendar.getInstance();
+    double amount, total;
+    IntChecker intChecker = new IntChecker();
     final static public String TAG = ExpenseTableAdapter.class.getSimpleName();
+    RecyclerView recyclerView;
+    int j = 0;
 
     public AdminExpenseTableAdapter(Context context, ArrayList<ExpenseRow> expenseRows) {
         this.context = context;
@@ -58,7 +93,7 @@ public class AdminExpenseTableAdapter extends RecyclerView.Adapter<AdminExpenseT
     }
 
     @Override
-    public void onBindViewHolder(@NonNull AdminExpenseTableAdapter.AdminExpenseViewHolder expenseViewHolder, int i) {
+    public void onBindViewHolder(@NonNull final AdminExpenseTableAdapter.AdminExpenseViewHolder expenseViewHolder, int i) {
         if (i == 0) {
             expenseViewHolder.tableRow.setBackgroundColor(Color.parseColor("#222F48"));
             expenseViewHolder.tableRow.setPadding(13, 13, 13, 13);
@@ -74,6 +109,8 @@ public class AdminExpenseTableAdapter extends RecyclerView.Adapter<AdminExpenseT
             expenseViewHolder.date.setTextColor(Color.parseColor("#ffffff"));
         } else {
 
+            j=i-1;
+
             expenseViewHolder.tableRow.setBackgroundColor(Color.parseColor("#efefef"));
             expenseViewHolder.tableRow.setPadding(13, 13, 13, 13);
 //            expenseViewHolder.tableRow.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
@@ -84,21 +121,38 @@ public class AdminExpenseTableAdapter extends RecyclerView.Adapter<AdminExpenseT
             expenseViewHolder.date.setTextColor(Color.parseColor("#000000"));
 
             Log.d(TAG, "value" + i);
-            expenseViewHolder.no.setText(expenseRowArrayList.get(i-1).getNo());
-            expenseViewHolder.expense_name.setText(expenseRowArrayList.get(i-1).getExpense_name());
-            expenseViewHolder.amount.setText(expenseRowArrayList.get(i-1).getAmount());
-            expenseViewHolder.date.setText(expenseRowArrayList.get(i-1).getDate());
+            expenseViewHolder.no.setText(expenseRowArrayList.get(j).getNo());
+            expenseViewHolder.expense_name.setText(expenseRowArrayList.get(j).getExpense_name());
+            Log.d(TAG, "OnReceiveAmount: " + expenseRowArrayList.get(j).getAmount());
+            NumberFormat formatter = new DecimalFormat("#,###");
+            String formattedNumber = formatter.format(Double.parseDouble(expenseRowArrayList.get(j).getAmount()));
+            expenseViewHolder.amount.setText(formattedNumber);
+            expenseViewHolder.date.setText(expenseRowArrayList.get(j).getDate());
 
-            final ExpenseRow expenseRow = expenseRowArrayList.get(i-1);
+            final ExpenseRow expenseRow = expenseRowArrayList.get(j);
+
+            amount = amount + Integer.parseInt(expenseRowArrayList.get(j).getAmount());
+
+            if(i==expenseRowArrayList.size()) {
+                total = amount;
+                Log.d(TAG, "OnReceivedTotalExp: " + total);
+            }
 
             expenseViewHolder.tableRow.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-//                Intent intent = new Intent(context,PopUpActivity2.class);
-//                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//                context.startActivity(intent);
 
-                    Dialog dialognew = new Dialog(context);
+                    final DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener() {
+                        @Override
+                        public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                            myCalendar.set(Calendar.YEAR,year);
+                            myCalendar.set(Calendar.MONTH,month);
+                            myCalendar.set(Calendar.DAY_OF_MONTH,dayOfMonth);
+                            updateLabel();
+                        }
+                    };
+
+                    final Dialog dialognew = new Dialog(context);
                     DisplayMetrics dm = context.getResources().getDisplayMetrics();
                     int width = dm.widthPixels;
                     int height = dm.heightPixels;
@@ -119,45 +173,109 @@ public class AdminExpenseTableAdapter extends RecyclerView.Adapter<AdminExpenseT
 
                     sn.setText(expenseRow.getNo());
                     product.setText(expenseRow.getExpense_name());
-                    amnt.setText(expenseRow.getAmount());
+                    NumberFormat formatter = new DecimalFormat("#,###");
+                    String formattedNumber = formatter.format(Double.parseDouble(expenseRow.getAmount()));
+                    amnt.setText(formattedNumber);
                     description.setText(expenseRow.getDescription());
                     datepick.setText(expenseRow.getDate());
 
                     dialognew.show();
 
-                    final Dialog editDialog = dialognew;
-
                     editButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            editDialog.setContentView(R.layout.expense_edit_layout);
+                            dialognew.setContentView(R.layout.expense_edit_layout);
 
-                            sNo = editDialog.findViewById(R.id.sn);
+                            sNo = dialognew.findViewById(R.id.sn);
                             sNo.setText(expenseRow.getNo());
-                            pName = editDialog.findViewById(R.id.product_name);
+                            pName = dialognew.findViewById(R.id.product_name);
                             pName.setText(expenseRow.getExpense_name());
-                            amt = editDialog.findViewById(R.id.amount);
-                            amt.setText(expenseRow.getAmount());
-                            description0 = editDialog.findViewById(R.id.description0);
+                            amt = dialognew.findViewById(R.id.amount);
+                            NumberFormat formatter = new DecimalFormat("#,###");
+                            String formattedNumber = formatter.format(Double.parseDouble(expenseRow.getAmount()));
+                            amt.setText(formattedNumber);
+                            description0 = dialognew.findViewById(R.id.description0);
                             description0.setText(expenseRow.getDescription());
-                            dateV = editDialog.findViewById(R.id.date);
+                            dateV = dialognew.findViewById(R.id.date);
                             dateV.setText(expenseRow.getDate());
-                            saveButton = editDialog.findViewById(R.id.save);
-                            cancelButton = editDialog.findViewById(R.id.cancel);
 
-                            editButton.setOnClickListener(new View.OnClickListener() {
+                            dateV.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
+                                    new DatePickerDialog(v.getContext(),date,myCalendar.get(Calendar.YEAR),myCalendar.get(Calendar.MONTH),myCalendar.get(Calendar.DAY_OF_MONTH)).show();
+                                }
+                            });
 
+                            saveButton = dialognew.findViewById(R.id.save);
+                            cancelButton = dialognew.findViewById(R.id.cancel);
+
+                            saveButton.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    final SharedPreferences myPrefs = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
+                                    int position = expenseViewHolder.getAdapterPosition()-1;
+                                    String[] dateArray = dateV.getText().toString().split("-");
+                                    String databaseDate = dateArray[2].concat("-" + dateArray[1] + "-" + dateArray[0]);
+                                    if(!pName.getText().toString().isEmpty()&&!amt.getText().toString().isEmpty()) {
+                                        if(intChecker.Checker(amt.getText().toString().replaceAll(",",""))) {
+//                                            expenseRowArrayList.remove(position);
+//                                            notifyItemRemoved(position);
+//                                            expenseRowArrayList.add(position, new ExpenseRow(sNo.getText().toString(), pName.getText().toString(), description0.getText().toString(), amt.getText().toString(), databaseDate, myPrefs.getString("user_id","")));
+//                                            notifyItemInserted(position);
+                                            Log.d(TAG, "OnReceiveAmt: " + amt.getText().toString());
+                                            new UpdateExpenseTask(context).execute(myPrefs.getString("store_id", ""), databaseDate, pName.getText().toString(), description0.getText().toString(), amt.getText().toString().replaceAll(",", ""), myPrefs.getString("user_id", ""), sNo.getText().toString());
+                                            expenseRowArrayList.get(expenseViewHolder.getAdapterPosition()-1).setDescription(description0.getText().toString());
+                                            expenseRowArrayList.get(expenseViewHolder.getAdapterPosition()-1).setExpense_name(pName.getText().toString());
+                                            expenseRowArrayList.get(expenseViewHolder.getAdapterPosition()-1).setDate(dateV.getText().toString());
+                                            expenseRowArrayList.get(expenseViewHolder.getAdapterPosition()-1).setAmount(amt.getText().toString().replaceAll(",",""));
+                                            expenseArrayList = expenseRowArrayList;
+                                            expenseRowArrayList = new ArrayList<>();
+                                            expenseRowArrayList.addAll(expenseArrayList);
+                                            notifyItemRangeChanged(position,getItemCount());
+                                            dialognew.dismiss();
+                                        }else
+                                            Toast.makeText(context, "amount should be in number format!", Toast.LENGTH_SHORT).show();
+                                    }else
+                                        Toast.makeText(context, "please fill all fields, description is optional!", Toast.LENGTH_LONG).show();
                                 }
                             });
 
                             cancelButton.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
-                                    editDialog.dismiss();
+                                    dialognew.dismiss();
                                 }
                             });
+
+                        }
+                    });
+
+                    deleteButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Log.d(TAG,"It reaches here for some good reason");
+
+                            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+
+                            builder.setTitle("Alert");
+                            builder.setMessage("Are you sure you want to delete the expense?");
+
+                            builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    new ExpenseDeleteTask(context).execute(sn.getText().toString());
+                                }
+                            });
+
+                            builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                }
+                            });
+
+                            AlertDialog dialog = builder.create();
+                            dialog.show();
 
                         }
                     });
@@ -170,6 +288,198 @@ public class AdminExpenseTableAdapter extends RecyclerView.Adapter<AdminExpenseT
     @Override
     public int getItemCount() {
         return expenseRowArrayList.size()+1;
+    }
+
+    private void updateLabel(){
+        String myFormat = "dd/MM/yy";
+        SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.getDefault());
+
+        dateV.setText(sdf.format(myCalendar.getTime()));
+    }
+
+    public class UpdateExpenseTask extends AsyncTask<String, Void, String> {
+
+        ProgressDialog dialog;
+        Context context;
+
+        public UpdateExpenseTask(Context ctx) {
+            this.context = ctx;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            dialog = new ProgressDialog(context);
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            dialog.setMessage("Loading. Please wait...");
+            dialog.setIndeterminate(true);
+            dialog.setCanceledOnTouchOutside(false);
+            dialog.show();
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+
+            String exp_store_id = strings[0];
+            String exp_date = strings[1];
+            String exp_name = strings[2];
+            String exp_description = strings[3];
+            String exp_cost = strings[4];
+            String exp_user_id = strings[5];
+            String exp_id = strings[6];
+
+            Log.d(TAG, "doInBackground: " + exp_user_id);
+
+            try {
+                URL url = new URL(expense_update_url);
+                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+                httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.setDoInput(true);
+                httpURLConnection.setDoOutput(true);
+                OutputStream outputStream = httpURLConnection.getOutputStream();
+                BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
+                String data = URLEncoder.encode("store_id", "UTF-8") + "=" + URLEncoder.encode(exp_store_id, "UTF-8") + "&" +
+                        URLEncoder.encode("date", "UTF-8") + "=" + URLEncoder.encode(exp_date, "UTF-8") + "&" +
+                        URLEncoder.encode("expense_name", "UTF-8") + "=" + URLEncoder.encode(exp_name, "UTF-8") + "&" +
+                        URLEncoder.encode("description", "UTF-8") + "=" + URLEncoder.encode(exp_description, "UTF-8") + "&" +
+                        URLEncoder.encode("cost", "UTF-8") + "=" + URLEncoder.encode(exp_cost, "UTF-8") + "&" +
+                        URLEncoder.encode("user_id", "UTF-8") + "=" + URLEncoder.encode(exp_user_id, "UTF-8") + "&" +
+                        URLEncoder.encode("id", "UTF-8") + "=" + URLEncoder.encode(exp_id, "UTF-8");
+                bufferedWriter.write(data);
+                bufferedWriter.flush();
+                bufferedWriter.close();
+                outputStream.close();
+                InputStream inputStream = httpURLConnection.getInputStream();
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "iso-8859-1"));
+                String response = "";
+                String line;
+                while ((line = bufferedReader.readLine()) != null) {
+                    response = response.concat(line);
+                }
+                bufferedReader.close();
+                inputStream.close();
+                httpURLConnection.disconnect();
+                return response;
+
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            Log.d(TAG, "onPostExecute: " + result);
+            Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
+
+            if (result != null) {
+                if (result.contains("Successful")) {
+                    String[] userDetails = result.split("-");
+                    if (this.dialog != null) {
+                        this.dialog.dismiss();
+                    }
+//                    SlideAnimationUtil.slideOutToLeft(LoginActivity.this, v.getRootView());
+                } else {
+                    Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
+                    if (this.dialog != null) {
+                        this.dialog.dismiss();
+                    }
+                }
+            } else {
+                Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
+                if (this.dialog != null) {
+                    this.dialog.dismiss();
+                }
+            }
+        }
+    }
+
+    public class ExpenseDeleteTask extends AsyncTask<String, Void, String> {
+
+        Context context;
+        ProgressDialog dialog;
+        String TAG = ExpenseTableActivity.class.getSimpleName();
+//        String TAG = LoginActivity.LoginTask.class.getSimpleName();
+
+        public ExpenseDeleteTask(Context ctx) {
+            context = ctx;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            dialog = new ProgressDialog(context);
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            dialog.setMessage("Loading. Please wait...");
+            dialog.setIndeterminate(true);
+            dialog.setCanceledOnTouchOutside(false);
+            dialog.show();
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+
+            String exp_id = strings[0];
+
+            try {
+                URL url = new URL(expense_delete_url);
+                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+                httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.setDoInput(true);
+                httpURLConnection.setDoOutput(true);
+                OutputStream outputStream = httpURLConnection.getOutputStream();
+                BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
+                String data = URLEncoder.encode("id", "UTF-8") + "=" + URLEncoder.encode(exp_id, "UTF-8");
+                bufferedWriter.write(data);
+                bufferedWriter.flush();
+                bufferedWriter.close();
+                outputStream.close();
+                InputStream inputStream = httpURLConnection.getInputStream();
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "iso-8859-1"));
+                String response = "";
+                String line;
+                while ((line = bufferedReader.readLine()) != null) {
+                    response = response.concat(line);
+                }
+                bufferedReader.close();
+                inputStream.close();
+                httpURLConnection.disconnect();
+
+            }catch (MalformedURLException e){
+                e.printStackTrace();
+            }catch(IOException e){
+                e.printStackTrace();
+            }
+
+            HttpHandler httpHandler = new HttpHandler();
+            return httpHandler.makeServiceDelete(expense_delete_url);
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+//            Log.d(TAG, "onPostExecute: " + result);
+
+            if (result != null) {
+                if(result.contains("Successfully")){
+                    if (this.dialog != null) {
+                        this.dialog.dismiss();
+                    }
+
+                    Toast.makeText(context, "successfully deleted", Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_SHORT).show();
+                }
+
+
+            } else {
+                if (this.dialog != null) {
+                    this.dialog.dismiss();
+                }
+                Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
+            }
+        }
+
     }
 
 }

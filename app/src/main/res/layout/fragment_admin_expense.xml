@@ -52,11 +52,11 @@
 
                 <Spinner
                     android:id="@+id/store_spinner"
-                    android:layout_width="130dp"
+                    android:layout_width="150dp"
                     android:layout_height="30dp"
                     android:layout_gravity="center_horizontal"
                     android:popupElevation="6dp"
-                    android:textAlignment="center"/>
+                    android:popupBackground="@color/colorWhite"/>
 
                 <android.support.design.widget.TextInputLayout
                     android:layout_height="wrap_content"
@@ -85,8 +85,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint=" Amount"
-                        android:textColor="#000"
-                        android:inputType="number"/>
+                        android:textColor="#000"/>
 
                 </android.support.design.widget.TextInputLayout>
 

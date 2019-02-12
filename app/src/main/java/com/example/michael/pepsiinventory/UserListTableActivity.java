@@ -3,9 +3,11 @@ package com.example.michael.pepsiinventory;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -47,6 +49,7 @@ public class UserListTableActivity extends AppCompatActivity {
     ArrayList<Store> storeRowArrayList = new ArrayList<>();
     String TAG = UserListTableActivity.class.getSimpleName();
     String store_id;
+    SharedPreferences preferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,19 +107,27 @@ public class UserListTableActivity extends AppCompatActivity {
                     }
                 }
 
-                Toast.makeText(UserListTableActivity.this, "onPostReceive: " + store_id, Toast.LENGTH_SHORT).show();
-
                 Log.d(TAG, "onPostReceive: " + store_id);
                 Log.d(TAG, "onPostReceive: " + store_spinner.getSelectedItem().toString());
 
                 if(!userArrayList.isEmpty())
                     userArrayList.clear();
 
-                for (int i = 0; i < userRowArrayList.size(); i++)
-                    if (store_id.equals(userRowArrayList.get(i).getStore_id())) {
-                        userArrayList.add(userRowArrayList.get(i));
+                preferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+
+                if(preferences.getString("role","").equals("Main Admin")){
+                    for (int i = 0; i < userRowArrayList.size(); i++)
+                        if (store_id.equals(userRowArrayList.get(i).getStore_id())) {
+                            userArrayList.add(userRowArrayList.get(i));
 //                        Log.d(TAG, "onPostReceiveValue: " + salesArrayList.get(i).getProduct_name());
-                    }
+                        }
+                }else{
+                    for (int i = 0; i < userRowArrayList.size(); i++)
+                        if (store_id.equals(userRowArrayList.get(i).getStore_id())&&!userRowArrayList.get(i).getRole().equals("Main Admin")) {
+                            userArrayList.add(userRowArrayList.get(i));
+//                        Log.d(TAG, "onPostReceiveValue: " + salesArrayList.get(i).getProduct_name());
+                        }
+                }
 
                 Log.d(TAG, "onPostReceiveSize: " + userArrayList.size());
 
@@ -200,6 +211,15 @@ public class UserListTableActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId()==android.R.id.home)
             finish();
+
+        if (item.getItemId() == R.id.action_logout) {
+            Intent intent = new Intent(UserListTableActivity.this,LoginActivity.class);
+            startActivity(intent);
+            Toast.makeText(getApplicationContext(), "succesfully logged out!", Toast.LENGTH_SHORT).show();
+            finish();
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -365,6 +385,7 @@ public class UserListTableActivity extends AppCompatActivity {
 //                            }
 //                        });
 
+//                        userListTableAdapter.getSpinner(store_spinner);
 
                         if (this.dialog != null) {
                             this.dialog.dismiss();
@@ -395,4 +416,5 @@ public class UserListTableActivity extends AppCompatActivity {
         }
 
     }
+
 }

@@ -103,15 +103,23 @@
                 android:textSize="12sp"
                 android:textColor="@color/colorWhite"/>
 
-            <EditText
-                android:id="@+id/role"
-                android:layout_width="130dp"
+            <RadioButton
+                android:id="@+id/admin"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
-                android:layout_marginEnd="30dp"
+                android:text="Admin"
                 android:textColor="@color/colorWhite"
                 android:layout_marginStart="10dp"
-                android:textStyle="bold"/>
+                android:buttonTint="@color/colorAccent"/>
+
+            <RadioButton
+                android:id="@+id/worker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Worker"
+                android:textColor="@color/colorWhite"
+                android:layout_marginStart="15dp"
+                android:buttonTint="@color/colorAccent"/>
 
         </LinearLayout>
 
@@ -130,7 +138,7 @@
                 android:textColor="@color/colorWhite"/>
 
             <TextView
-                android:id="@+id/status"
+                android:id="@+id/status_txt"
                 android:layout_width="130dp"
                 android:layout_height="wrap_content"
                 android:textSize="12sp"

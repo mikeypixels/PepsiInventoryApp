@@ -42,7 +42,8 @@
                     android:layout_height="wrap_content"
                     android:id="@+id/store_spinner"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"/>
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:popupBackground="@color/colorWhite"/>
 
             </android.support.constraint.ConstraintLayout>
 

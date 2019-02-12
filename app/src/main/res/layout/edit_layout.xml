@@ -38,10 +38,11 @@
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
             android:layout_marginStart="30dp"
+            android:layout_marginEnd="30dp"
             android:orientation="horizontal">
 
             <TextView
@@ -51,15 +52,16 @@
                 android:textSize="12sp"
                 android:textColor="@color/colorWhite"/>
 
-            <EditText
-                android:id="@+id/product_name"
+            <Spinner
+                android:id="@+id/product_name_spinner"
                 android:layout_width="130dp"
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
                 android:layout_marginEnd="30dp"
                 android:textColor="@color/colorWhite"
                 android:layout_marginStart="10dp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:textAlignment="center"/>
 
         </LinearLayout>
 
@@ -85,7 +87,8 @@
                 android:layout_marginEnd="30dp"
                 android:layout_marginStart="10dp"
                 android:textColor="@color/colorWhite"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:inputType="number"/>
 
         </LinearLayout>
 
@@ -103,9 +106,9 @@
                 android:textSize="12sp"
                 android:textColor="@color/colorWhite"/>
 
-            <EditText
+            <TextView
                 android:id="@+id/amount"
-                android:layout_width="130dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
                 android:layout_marginEnd="30dp"
@@ -137,7 +140,8 @@
                 android:layout_marginEnd="30dp"
                 android:textColor="@color/colorWhite"
                 android:layout_marginStart="10dp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:focusable="false"/>
 
         </LinearLayout>
 

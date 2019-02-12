@@ -31,13 +31,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 
-public class LoginActivity extends Activity {
+public class LoginActivity extends AppCompatActivity {
 
     Button button;
     String login_url, username, password;
     EditText usernameEdit, passwordEdit;
     SharedPreferences myPrefs;
-    MainActivity mainActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,13 +57,12 @@ public class LoginActivity extends Activity {
                 if (username.isEmpty() || password.isEmpty())
                     Toast.makeText(LoginActivity.this, "Please fill all fields!", Toast.LENGTH_SHORT).show();
                 else {
-                    if (isOnline()) {
+//                    if (isOnline()) {
                         new LoginTask(LoginActivity.this).execute(username, password);
-                    } else {
-                        Toast.makeText(LoginActivity.this, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
-                    }
+//                    } else {
+//                        Toast.makeText(LoginActivity.this, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
+//                    }
                 }
-
             }
         });
     }
@@ -137,18 +135,25 @@ public class LoginActivity extends Activity {
             {
                 if (result.contains("Successful")) {
                     String[] userDetails = result.split("-");
-                    Intent intent = new Intent(context, MainActivity.class);
-                    intent.putExtra("f_name", userDetails[1]);
-                    intent.putExtra("l_name", userDetails[2]);
-                    intent.putExtra("role", userDetails[3]);
-                    intent.putExtra("status", userDetails[4]);
-                    intent.putExtra("user_id", userDetails[5]);
-                    intent.putExtra("store_id", userDetails[6]);
-                    startActivity(intent);
-//                    SlideAnimationUtil.slideOutToLeft(LoginActivity.this, v.getRootView());
-                    finish();
 
-                    Bundle extras = getIntent().getExtras();
+                    Log.d(TAG, "OnLoginReceive: " + userDetails[4]);
+                    if(userDetails[4].equals("active")) {
+                        Intent intent = new Intent(context, MainActivity.class);
+                        intent.putExtra("f_name", userDetails[1]);
+                        intent.putExtra("l_name", userDetails[2]);
+                        intent.putExtra("role", userDetails[3]);
+                        intent.putExtra("status", userDetails[4]);
+                        intent.putExtra("user_id", userDetails[5]);
+                        intent.putExtra("store_id", userDetails[6]);
+                        startActivity(intent);
+//                    SlideAnimationUtil.slideOutToLeft(LoginActivity.this, v.getRootView());
+                        finish();
+                    }else{
+                        if (this.dialog != null) {
+                            this.dialog.dismiss();
+                        }
+                        Toast.makeText(context, "Access denied!", Toast.LENGTH_SHORT).show();
+                    }
 
                     myPrefs = PreferenceManager.getDefaultSharedPreferences(LoginActivity.this);
 
@@ -156,6 +161,8 @@ public class LoginActivity extends Activity {
                     editor.putString("first_name",userDetails[1]);
                     editor.putString("last_name",userDetails[2]);
                     editor.putString("role",userDetails[3]);
+                    editor.putString("store_id",userDetails[6]);
+                    editor.putString("user_id",userDetails[5]);
 
                     editor.apply();
 
@@ -165,9 +172,7 @@ public class LoginActivity extends Activity {
                     }
                     Toast.makeText(context, "Oops... Wrong username or password", Toast.LENGTH_LONG).show();
                 }
-            } else
-
-            {
+            } else {
                 if (this.dialog != null) {
                     this.dialog.dismiss();
                 }
@@ -178,8 +183,10 @@ public class LoginActivity extends Activity {
     }
 
     protected boolean isOnline() {
+        String TAG = LoginActivity.class.getSimpleName();
         ConnectivityManager cm = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
+//        Log.d(TAG, "OnReceiveNetInfo: " + netInfo.getExtraInfo());
         if (netInfo != null && netInfo.isConnectedOrConnecting()) {
             return true;
         } else {

@@ -136,10 +136,10 @@ public class AddUserFragment extends Fragment {
                                     store_id = "0";
                                 }
 
-//                                if(malebtn.isChecked())
+                                if(malebtn.isChecked())
                                     new AddUserTask(getContext()).execute(f_name.getText().toString(),l_name.getText().toString(),username.getText().toString(),malebtn.getText().toString(),store_id,spinner.getSelectedItem().toString());
-//                                else
-//                                    new AddUserTask(getContext()).execute(f_name.getText().toString(),l_name.getText().toString(),username.getText().toString(),femalebtn.getText().toString(),store_id,spinner.getSelectedItem().toString());
+                                else
+                                    new AddUserTask(getContext()).execute(f_name.getText().toString(),l_name.getText().toString(),username.getText().toString(),femalebtn.getText().toString(),store_id,spinner.getSelectedItem().toString());
 
                             }else{
                                 Toast.makeText(getContext(), "Check your Internet Connection", Toast.LENGTH_SHORT).show();

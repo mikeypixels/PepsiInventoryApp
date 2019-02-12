@@ -2,6 +2,7 @@
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".SalesTableActivity">
@@ -30,7 +31,7 @@
                 android:layout_height="?attr/actionBarSize"
                 app:titleTextColor="@color/colorWhite"
                 app:popupTheme="@style/AppTheme"
-                app:title="Sales table"
+                app:title="Sales"
                 app:titleTextAppearance="@color/colorWhite"/>
 
         </android.support.design.widget.CollapsingToolbarLayout>
@@ -44,5 +45,14 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
     </android.support.v7.widget.RecyclerView>
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="NO SALES TO SHOW!"
+        android:textStyle="italic"
+        android:textSize="30sp"/>
 
 </android.support.design.widget.CoordinatorLayout>

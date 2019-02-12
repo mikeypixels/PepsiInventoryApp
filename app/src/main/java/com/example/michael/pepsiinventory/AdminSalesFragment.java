@@ -5,11 +5,13 @@ import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.PorterDuff;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -43,6 +45,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -94,6 +98,7 @@ public class AdminSalesFragment extends Fragment implements AdapterView.OnItemSe
         spinner.getBackground().setColorFilter(getResources().getColor(R.color.colorBlack), PorterDuff.Mode.SRC_ATOP);
 
         spinner.setAdapter(adapter);
+
         final DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
@@ -113,6 +118,8 @@ public class AdminSalesFragment extends Fragment implements AdapterView.OnItemSe
 
         intChecker = new IntChecker();
 
+        final SharedPreferences myPrefs = PreferenceManager.getDefaultSharedPreferences(getActivity().getBaseContext());
+
         send1.setOnClickListener(new View.OnClickListener() {
 
             double cost;
@@ -124,6 +131,8 @@ public class AdminSalesFragment extends Fragment implements AdapterView.OnItemSe
                     if (quantity_txt.getText().toString().isEmpty() || datepicker.getText().toString().isEmpty()) {
                         textView.setText("please fill all fields!");
                     } else {
+                        String[] dateArray = datepicker.getText().toString().split("/");
+                        String databaseDate = dateArray[2].concat("-" + dateArray[1] + "-" + dateArray[0]);
                         if(!spinner.getSelectedItem().toString().equals("select product")) {
                             if (intChecker.Checker(quantity_txt.getText().toString())) {
 
@@ -133,21 +142,21 @@ public class AdminSalesFragment extends Fragment implements AdapterView.OnItemSe
                                 }
 
                                 textView.setText("");
+
                                 String myFormat = "yyyy-mm-dd";
                                 SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.getDefault());
                                 if (isOnline()) {
                                     if (spinner.getSelectedItem().toString().equals("Crate")) {
                                         Log.d(TAG, "OnReceive: " + user_id);
                                         cost = Integer.parseInt(quantity_txt.getText().toString()) * 9800;
-                                        new AddSalesTask(getContext()).execute("1", store_id, quantity_txt.getText().toString(), String.valueOf(cost), datepicker.getText().toString(), user_id);
+                                        new AddSalesTask(getContext()).execute("1", store_id, quantity_txt.getText().toString(), String.valueOf(cost), databaseDate, myPrefs.getString("user_id",""));
                                     } else if (spinner.getSelectedItem().toString().equals("Full shell")) {
                                         Log.d(TAG, "OnReceive: " + user_id);
                                         cost = Integer.parseInt(quantity_txt.getText().toString()) * 19800;
-                                        new AddSalesTask(getContext()).execute("2", store_id, quantity_txt.getText().toString(), String.valueOf(cost), datepicker.getText().toString(), user_id);
+                                        new AddSalesTask(getContext()).execute("2", store_id, quantity_txt.getText().toString(), String.valueOf(cost), databaseDate, myPrefs.getString("user_id",""));
                                     } else if (spinner.getSelectedItem().toString().equals("Bottle")) {
-
                                         cost = Integer.parseInt(quantity_txt.getText().toString()) * 300;
-                                        new AddSalesTask(getContext()).execute("3", store_id, quantity_txt.getText().toString(), String.valueOf(cost), datepicker.getText().toString(), user_id);
+                                        new AddSalesTask(getContext()).execute("3", store_id, quantity_txt.getText().toString(), String.valueOf(cost), databaseDate, myPrefs.getString("user_id",""));
                                     }
 
                                     quantity_txt.setText("");
@@ -159,7 +168,7 @@ public class AdminSalesFragment extends Fragment implements AdapterView.OnItemSe
                                     Toast.makeText(getContext(), "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
                                 }
                             } else {
-                                textView.setText("quantity should be in number format!");
+                                textView.setText("quantity should be in currency format!");
                             }
                         }else{
                             textView.setText("please select product!");
@@ -263,6 +272,7 @@ public class AdminSalesFragment extends Fragment implements AdapterView.OnItemSe
                     String[] userDetails = result.split("-");
                     quantity_txt.setText("");
                     datepicker.setText("");
+                    store_spinner.setSelection(0);
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }

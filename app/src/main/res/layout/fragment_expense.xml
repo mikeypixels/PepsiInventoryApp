@@ -76,8 +76,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint=" Amount"
-                    android:textColor="#000"
-                    android:inputType="number"/>
+                    android:textColor="#000"/>
 
             </android.support.design.widget.TextInputLayout>
 

@@ -7,6 +7,8 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.AsyncTask;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -33,6 +35,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 
 public class AdminSalesTableActivity extends AppCompatActivity {
@@ -55,6 +59,10 @@ public class AdminSalesTableActivity extends AppCompatActivity {
     ArrayList<String> storeString = new ArrayList<>();
     ArrayList<SalesRow> salesArrayList = new ArrayList<>();
     String store_id;
+    Snackbar snackbar;
+    CoordinatorLayout coordinatorLayout;
+    double total = 0, overall_total = 0;
+    TextView textView;
 
     private final static String TAG = AdminSalesTableActivity.class.getSimpleName();
 
@@ -74,6 +82,8 @@ public class AdminSalesTableActivity extends AppCompatActivity {
 
         sales_url = getString(R.string.serve_url) + "sales.php";
         store_url = getString(R.string.serve_url) + "stores.php";
+        coordinatorLayout = findViewById(R.id.coordinatorLayout);
+        textView = findViewById(R.id.textView);
 
         toolbar = findViewById(R.id.toolbar);
         collapsingToolbarLayout = findViewById(R.id.collapsingToolbar);
@@ -130,8 +140,6 @@ public class AdminSalesTableActivity extends AppCompatActivity {
                     }
                 }
 
-                Toast.makeText(AdminSalesTableActivity.this, "onPostReceive: " + store_id, Toast.LENGTH_SHORT).show();
-
                 Log.d(TAG, "onPostReceive: " + store_id);
                 Log.d(TAG, "onPostReceive: " + spinner.getSelectedItem().toString());
 
@@ -142,6 +150,7 @@ public class AdminSalesTableActivity extends AppCompatActivity {
                     if (store_id.equals(salesRowArrayList.get(i).getStore_id())) {
                         salesArrayList.add(salesRowArrayList.get(i));
 //                        Log.d(TAG, "onPostReceiveValue: " + salesArrayList.get(i).getProduct_name());
+                        total = total + Double.parseDouble(salesRowArrayList.get(i).getAmount());
                     }
 
                 Log.d(TAG, "onPostReceive: " + spinner.getSelectedItem().toString());
@@ -149,6 +158,49 @@ public class AdminSalesTableActivity extends AppCompatActivity {
                 adminSalesTableAdapter = new AdminSalesTableAdapter(AdminSalesTableActivity.this, salesArrayList);
                 recyclerView.setAdapter(adminSalesTableAdapter);
                 adminSalesTableAdapter.notifyDataSetChanged();
+
+                if (store_id.equals("0")) {
+                    NumberFormat formatter = new DecimalFormat("#,###");
+                    String formattedNumber = formatter.format(overall_total);
+                    snackbar = Snackbar
+                            .make(coordinatorLayout, "Total sales: " + formattedNumber + " Tshs", Snackbar.LENGTH_INDEFINITE)
+                            .setAction("OK", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    snackbar.dismiss();
+                                }
+                            });
+                    textView.setText("SELECT STORE!");
+                    textView.setVisibility(View.VISIBLE);
+                } else {
+                    NumberFormat formatter = new DecimalFormat("#,###");
+                    String formattedNumber = formatter.format(total);
+                    snackbar = Snackbar
+                            .make(coordinatorLayout, spinner.getSelectedItem().toString() + " Expenses: " + formattedNumber + " Tshs", Snackbar.LENGTH_INDEFINITE)
+                            .setAction("OK", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    snackbar.dismiss();
+                                }
+                            });
+                    total = 0;
+
+                    if(salesArrayList.isEmpty()) {
+                        textView.setText("NO SALES TO SHOW!");
+                        textView.setVisibility(View.VISIBLE);
+                    }
+                    else
+                        textView.setVisibility(View.INVISIBLE);
+                }
+
+                // Changing message text color
+                snackbar.setActionTextColor(Color.RED);
+
+                // Changing action button text color
+                View sbView = snackbar.getView();
+                TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+                textView.setTextColor(Color.YELLOW);
+                snackbar.show();
 
             }
 
@@ -213,6 +265,7 @@ public class AdminSalesTableActivity extends AppCompatActivity {
                                     jsonArray.getJSONObject(i).getString("amount"),
                                     jsonArray.getJSONObject(i).getString("date"),
                                     jsonArray.getJSONObject(i).getString("store_id")));
+                            overall_total = overall_total + Double.parseDouble(jsonArray.getJSONObject(i).getString("amount"));
 //                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("id"),jsonArray.getJSONObject(i).getString("name"),jsonArray.getJSONObject(i).getString("location")));
 
                             Log.d(TAG, "onPostExecuteNewValue: " + salesRowArrayList.get(i).getStore_id());
@@ -349,17 +402,39 @@ public class AdminSalesTableActivity extends AppCompatActivity {
                     salesRows.clear();
 
                 for (int i = 0; i < salesArrayList.size(); i++) {
-                    if (salesArrayList.get(i).getSn().toLowerCase().contains(query.toLowerCase())||salesArrayList.get(i).getProduct_name().toLowerCase().contains(query.toLowerCase())||
-                            salesArrayList.get(i).getQuantity().toLowerCase().contains(query.toLowerCase())||salesArrayList.get(i).getAmount().toLowerCase().contains(query.toLowerCase())||
+                    if (salesArrayList.get(i).getSn().toLowerCase().contains(query.toLowerCase()) || salesArrayList.get(i).getProduct_name().toLowerCase().contains(query.toLowerCase()) ||
+                            salesArrayList.get(i).getQuantity().toLowerCase().contains(query.toLowerCase()) || salesArrayList.get(i).getAmount().toLowerCase().contains(query.toLowerCase()) ||
                             salesArrayList.get(i).getDate().toLowerCase().contains(query.toLowerCase())) {
-                        salesRows.add(new SalesRow(salesArrayList.get(i).getSn(),salesArrayList.get(i).getProduct_name(), salesArrayList.get(i).getQuantity(),salesArrayList.get(i).getAmount(),
-                                salesArrayList.get(i).getDate(),salesArrayList.get(i).getStore_id()));
+                        salesRows.add(new SalesRow(salesArrayList.get(i).getSn(), salesArrayList.get(i).getProduct_name(), salesArrayList.get(i).getQuantity(), salesArrayList.get(i).getAmount(),
+                                salesArrayList.get(i).getDate(), salesArrayList.get(i).getStore_id()));
+                        total = total + Double.parseDouble(salesArrayList.get(i).getAmount());
                     }
                 }
 
                 adminSalesTableAdapter = new AdminSalesTableAdapter(AdminSalesTableActivity.this, salesRows);
                 recyclerView.setAdapter(adminSalesTableAdapter);
                 adminSalesTableAdapter.notifyDataSetChanged();
+
+                NumberFormat formatter = new DecimalFormat("#,###");
+                String formattedNumber = formatter.format(total);
+                snackbar = Snackbar
+                        .make(coordinatorLayout, "Total sales: " + formattedNumber + " Tshs", Snackbar.LENGTH_INDEFINITE)
+                        .setAction("OK", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                snackbar.dismiss();
+                            }
+                        });
+                total = 0;
+
+                // Changing message text color
+                snackbar.setActionTextColor(Color.RED);
+
+                // Changing action button text color
+                View sbView = snackbar.getView();
+                TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+                textView.setTextColor(Color.YELLOW);
+                snackbar.show();
 
                 return false;
             }
@@ -371,17 +446,39 @@ public class AdminSalesTableActivity extends AppCompatActivity {
                     salesRows.clear();
 
                 for (int i = 0; i < salesArrayList.size(); i++) {
-                    if (salesArrayList.get(i).getSn().toLowerCase().contains(newText.toLowerCase())||salesArrayList.get(i).getProduct_name().toLowerCase().contains(newText.toLowerCase())||
-                            salesArrayList.get(i).getQuantity().toLowerCase().contains(newText.toLowerCase())||salesArrayList.get(i).getAmount().toLowerCase().contains(newText.toLowerCase())||
+                    if (salesArrayList.get(i).getSn().toLowerCase().contains(newText.toLowerCase()) || salesArrayList.get(i).getProduct_name().toLowerCase().contains(newText.toLowerCase()) ||
+                            salesArrayList.get(i).getQuantity().toLowerCase().contains(newText.toLowerCase()) || salesArrayList.get(i).getAmount().toLowerCase().contains(newText.toLowerCase()) ||
                             salesArrayList.get(i).getDate().toLowerCase().contains(newText.toLowerCase())) {
-                                salesRows.add(new SalesRow(salesArrayList.get(i).getSn(),salesArrayList.get(i).getProduct_name(), salesArrayList.get(i).getQuantity(),salesArrayList.get(i).getAmount(),
-                                        salesArrayList.get(i).getDate(),salesArrayList.get(i).getStore_id()));
+                        salesRows.add(new SalesRow(salesArrayList.get(i).getSn(), salesArrayList.get(i).getProduct_name(), salesArrayList.get(i).getQuantity(), salesArrayList.get(i).getAmount(),
+                                salesArrayList.get(i).getDate(), salesArrayList.get(i).getStore_id()));
+                        total = total + Double.parseDouble(salesArrayList.get(i).getAmount());
                     }
                 }
 
                 adminSalesTableAdapter = new AdminSalesTableAdapter(AdminSalesTableActivity.this, salesRows);
                 recyclerView.setAdapter(adminSalesTableAdapter);
                 adminSalesTableAdapter.notifyDataSetChanged();
+
+                NumberFormat formatter = new DecimalFormat("#,###");
+                String formattedNumber = formatter.format(total);
+                snackbar = Snackbar
+                        .make(coordinatorLayout, "Total sales: " + formattedNumber + " Tshs", Snackbar.LENGTH_INDEFINITE)
+                        .setAction("OK", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                snackbar.dismiss();
+                            }
+                        });
+                total = 0;
+
+                // Changing message text color
+                snackbar.setActionTextColor(Color.RED);
+
+                // Changing action button text color
+                View sbView = snackbar.getView();
+                TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+                textView.setTextColor(Color.YELLOW);
+                snackbar.show();
 
 //                adminSalesTableAdapter.filter(newText);
 
