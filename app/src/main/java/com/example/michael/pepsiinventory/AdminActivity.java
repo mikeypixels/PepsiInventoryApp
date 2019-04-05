@@ -55,18 +55,8 @@ public class AdminActivity extends AppCompatActivity {
         SectionsPageAdapter adapter = new SectionsPageAdapter(getSupportFragmentManager());
         adapter.addFragment(new AddUserFragment(), "User");
         adapter.addFragment(new AddStoreFragment(), "Store");
+        adapter.addFragment(new ChangePriceFragment(), "Price");
         viewPager.setAdapter(adapter);
-    }
-
-    private Fragment getHomeFragment() {
-        switch (navItemIndex) {
-            case 3:
-                // admin
-                AddUserFragment adminUserFragment = new AddUserFragment();
-                return adminUserFragment;
-            default:
-                return new AddUserFragment();
-        }
     }
 
     @Override

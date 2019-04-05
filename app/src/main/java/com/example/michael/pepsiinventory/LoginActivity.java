@@ -11,13 +11,21 @@ import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.transition.Slide;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.gson.JsonObject;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -41,13 +49,18 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // inside your activity (if you did not enable transitions in your theme)
+        getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
         setContentView(R.layout.activity_login);
+        setupWindowAnimations();
 
         button = findViewById(R.id.submit);
-        usernameEdit = findViewById(R.id.username);
+        usernameEdit = findViewById(R.id.username_login);
         passwordEdit = findViewById(R.id.password);
 
-        login_url = getString(R.string.serve_url) + "login.php";
+        login_url = getString(R.string.serve_url) + "login";
+
+//        "http://192.168.43.174/pepsi/login.php"
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -57,14 +70,20 @@ public class LoginActivity extends AppCompatActivity {
                 if (username.isEmpty() || password.isEmpty())
                     Toast.makeText(LoginActivity.this, "Please fill all fields!", Toast.LENGTH_SHORT).show();
                 else {
-//                    if (isOnline()) {
+                    if (isOnline()) {
                         new LoginTask(LoginActivity.this).execute(username, password);
-//                    } else {
-//                        Toast.makeText(LoginActivity.this, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
-//                    }
+                    } else {
+                        Toast.makeText(LoginActivity.this, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
         });
+    }
+
+    private void setupWindowAnimations() {
+        Slide slide = new Slide();
+        slide.setDuration(500);
+        getWindow().setExitTransition(slide);
     }
 
     public class LoginTask extends AsyncTask<String, Void, String> {
@@ -91,6 +110,8 @@ public class LoginActivity extends AppCompatActivity {
         protected String doInBackground(String... strings) {
             String login_name = strings[0];
             String login_pass = strings[1];
+
+            Log.d(TAG,"OnReceiveValues: " + login_name + " " + login_pass);
 
             try {
                 URL url = new URL(login_url);
@@ -131,59 +152,77 @@ public class LoginActivity extends AppCompatActivity {
         protected void onPostExecute(String result) {
             Log.d(TAG, "onPostExecute: " + result);
 
-            if (result != null)
-            {
-                if (result.contains("Successful")) {
-                    String[] userDetails = result.split("-");
+            JSONObject jsonObject;
+            try {
 
-                    Log.d(TAG, "OnLoginReceive: " + userDetails[4]);
-                    if(userDetails[4].equals("active")) {
-                        Intent intent = new Intent(context, MainActivity.class);
-                        intent.putExtra("f_name", userDetails[1]);
-                        intent.putExtra("l_name", userDetails[2]);
-                        intent.putExtra("role", userDetails[3]);
-                        intent.putExtra("status", userDetails[4]);
-                        intent.putExtra("user_id", userDetails[5]);
-                        intent.putExtra("store_id", userDetails[6]);
-                        startActivity(intent);
+                if (result != null)
+                {
+                    jsonObject = new JSONObject(result);
+                    JSONObject userDetails = jsonObject.getJSONObject("result");
+
+                    if (jsonObject.getString("status").equals("true")) {
+
+                        if(userDetails.getString("status").equals("active")) {
+                            Intent intent = new Intent(context, MainActivity.class);
+                            intent.putExtra("f_name", userDetails.getString("f_name"));
+                            intent.putExtra("l_name", userDetails.getString("l_name"));
+                            intent.putExtra("role", userDetails.getString("role"));
+                            intent.putExtra("status", userDetails.getString("status"));
+                            intent.putExtra("user_id", userDetails.getString("id"));
+                            intent.putExtra("store_id", userDetails.getString("store_id"));
+                            startActivity(intent);
 //                    SlideAnimationUtil.slideOutToLeft(LoginActivity.this, v.getRootView());
-                        finish();
-                    }else{
+                            finish();
+
+                            if (this.dialog != null) {
+                                this.dialog.dismiss();
+                            }
+
+                        }else{
+                            if (this.dialog != null) {
+                                this.dialog.dismiss();
+                            }
+                            Toast.makeText(context, "Access denied!", Toast.LENGTH_SHORT).show();
+                        }
+
+                        myPrefs = PreferenceManager.getDefaultSharedPreferences(LoginActivity.this);
+
+                        SharedPreferences.Editor editor = myPrefs.edit();
+                        editor.putString("first_name",userDetails.getString("f_name"));
+                        editor.putString("last_name",userDetails.getString("l_name"));
+                        editor.putString("role",userDetails.getString("role"));
+                        editor.putString("store_id",userDetails.getString("store_id"));
+                        editor.putString("user_id",userDetails.getString("id"));
+
+                        editor.apply();
+
+                    } else {
                         if (this.dialog != null) {
                             this.dialog.dismiss();
                         }
-                        Toast.makeText(context, "Access denied!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "Oops... Wrong username or password", Toast.LENGTH_LONG).show();
                     }
-
-                    myPrefs = PreferenceManager.getDefaultSharedPreferences(LoginActivity.this);
-
-                    SharedPreferences.Editor editor = myPrefs.edit();
-                    editor.putString("first_name",userDetails[1]);
-                    editor.putString("last_name",userDetails[2]);
-                    editor.putString("role",userDetails[3]);
-                    editor.putString("store_id",userDetails[6]);
-                    editor.putString("user_id",userDetails[5]);
-
-                    editor.apply();
-
                 } else {
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
                     Toast.makeText(context, "Oops... Wrong username or password", Toast.LENGTH_LONG).show();
                 }
-            } else {
+
+            } catch (JSONException e) {
+                e.printStackTrace();
                 if (this.dialog != null) {
                     this.dialog.dismiss();
                 }
-                Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
+                Toast.makeText(context,"Oops... Wrong username or password", Toast.LENGTH_LONG).show();
+                return;
             }
+
         }
 
     }
 
     protected boolean isOnline() {
-        String TAG = LoginActivity.class.getSimpleName();
         ConnectivityManager cm = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
 //        Log.d(TAG, "OnReceiveNetInfo: " + netInfo.getExtraInfo());

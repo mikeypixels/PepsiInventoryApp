@@ -6,8 +6,11 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
@@ -46,12 +49,14 @@ public class StoreListTableAdapter extends RecyclerView.Adapter<StoreListTableAd
 
     Context context;
     ArrayList<Store> storeRowArrayList;
+    ArrayList<Store> storeArrayList;
     TextView store_id,store_name,location;
     TextView st_id,st_name,loc;
-    Button edit_btn,delete_btn,save_btn,cancel_btn;
+    Button edit_btn,save_btn,cancel_btn;
     Spinner spinner;
-    String store_update_url = "http://192.168.43.174/pepsi/store_update.php";
-    String store_delete_url = "http://192.168.43.174/pepsi/delete_store.php";
+    String store_update_url;
+    String store_delete_url;
+    int position;
 
     public StoreListTableAdapter(Context context,ArrayList<Store> arrayList) {
         this.context = context;
@@ -61,11 +66,10 @@ public class StoreListTableAdapter extends RecyclerView.Adapter<StoreListTableAd
     public static class StoreListViewHolder extends RecyclerView.ViewHolder{
 
         TextView store_id,store_name,location;
-        LinearLayout tableRow;
+        ConstraintLayout tableRow;
 
         public StoreListViewHolder(View itemView){
             super(itemView);
-
             store_id = itemView.findViewById(R.id.store_id);
             store_name = itemView.findViewById(R.id.store_name);
             location = itemView.findViewById(R.id.location);
@@ -81,7 +85,7 @@ public class StoreListTableAdapter extends RecyclerView.Adapter<StoreListTableAd
     }
 
     @Override
-    public void onBindViewHolder(@NonNull StoreListTableAdapter.StoreListViewHolder storeListViewHolder, int i) {
+    public void onBindViewHolder(@NonNull final StoreListTableAdapter.StoreListViewHolder storeListViewHolder, int i) {
         if(i==0){
             storeListViewHolder.tableRow.setBackgroundColor(Color.parseColor("#222F48"));
             storeListViewHolder.tableRow.setPadding(13, 13, 13, 13);
@@ -128,7 +132,7 @@ public class StoreListTableAdapter extends RecyclerView.Adapter<StoreListTableAd
                     store_name = dialognew.findViewById(R.id.store_name);
                     location = dialognew.findViewById(R.id.location);
                     edit_btn = dialognew.findViewById(R.id.edit);
-                    delete_btn = dialognew.findViewById(R.id.delete);
+//                    delete_btn = dialognew.findViewById(R.id.delete);
 
                     store_id.setText(salesRow.getStore_id());
                     store_name.setText(salesRow.getStore_name());
@@ -153,7 +157,13 @@ public class StoreListTableAdapter extends RecyclerView.Adapter<StoreListTableAd
                             save_btn.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
-                                    new UpdateStoreTask(context).execute(st_id.getText().toString(),st_name.getText().toString(),loc.getText().toString());
+                                    position = storeListViewHolder.getAdapterPosition()-1;
+                                    if(isOnline()) {
+                                        storeRowArrayList.get(storeListViewHolder.getAdapterPosition()-1).setStore_name(st_name.getText().toString());
+                                        storeRowArrayList.get(storeListViewHolder.getAdapterPosition()-1).setLocation(loc.getText().toString());
+                                        new UpdateStoreTask(context).execute(st_id.getText().toString(), st_name.getText().toString(), loc.getText().toString());
+                                    } else
+                                        Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
                                     dialognew.dismiss();
                                 }
                             });
@@ -168,36 +178,40 @@ public class StoreListTableAdapter extends RecyclerView.Adapter<StoreListTableAd
                         }
                     });
 
-                    delete_btn.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Log.d(TAG,"It reaches here for some good reason");
-
-                            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-
-                            builder.setTitle("Alert");
-                            builder.setMessage("Are you sure you want to delete the store?");
-
-                            builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    new StoreDeleteTask(context).execute(store_id.getText().toString());
-                                    dialognew.dismiss();
-                                }
-                            });
-
-                            builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-
-                                }
-                            });
-
-                            AlertDialog dialog = builder.create();
-                            dialog.show();
-
-                        }
-                    });
+//                    delete_btn.setOnClickListener(new View.OnClickListener() {
+//                        @Override
+//                        public void onClick(View v) {
+//                            Log.d(TAG,"It reaches here for some good reason");
+//
+//                            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+//
+//                            builder.setTitle("Alert");
+//                            builder.setMessage("Are you sure you want to delete the store?");
+//
+//                            builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+//                                @Override
+//                                public void onClick(DialogInterface dialog, int which) {
+//                                    position = storeListViewHolder.getAdapterPosition()-1;
+//                                    if(isOnline())
+//                                        new StoreDeleteTask(context).execute(store_id.getText().toString());
+//                                    else
+//                                        Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
+//                                    dialognew.dismiss();
+//                                }
+//                            });
+//
+//                            builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+//                                @Override
+//                                public void onClick(DialogInterface dialog, int which) {
+//
+//                                }
+//                            });
+//
+//                            AlertDialog dialog = builder.create();
+//                            dialog.show();
+//
+//                        }
+//                    });
 
 
                 }
@@ -239,16 +253,18 @@ public class StoreListTableAdapter extends RecyclerView.Adapter<StoreListTableAd
             String store_name = strings[1];
             String store_location = strings[2];
 
+            store_update_url = this.context.getString(R.string.serve_url) + "store/edit/" + id;
+
             try {
                 URL url = new URL(store_update_url);
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-                httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.setRequestMethod("PUT");
                 httpURLConnection.setDoInput(true);
                 httpURLConnection.setDoOutput(true);
                 OutputStream outputStream = httpURLConnection.getOutputStream();
                 BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
-                String data = URLEncoder.encode("id", "UTF-8") + "=" + URLEncoder.encode(id, "UTF-8") + "&" +
-                        URLEncoder.encode("name", "UTF-8") + "=" + URLEncoder.encode(store_name, "UTF-8") + "&" +
+                String data = URLEncoder.encode("store_id", "UTF-8") + "=" + URLEncoder.encode(id, "UTF-8") + "&" +
+                        URLEncoder.encode("store_name", "UTF-8") + "=" + URLEncoder.encode(store_name, "UTF-8") + "&" +
                         URLEncoder.encode("location", "UTF-8") + "=" + URLEncoder.encode(store_location, "UTF-8");
                 bufferedWriter.write(data);
                 bufferedWriter.flush();
@@ -281,8 +297,14 @@ public class StoreListTableAdapter extends RecyclerView.Adapter<StoreListTableAd
             Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
 
             if (result != null) {
-                if (result.contains("Successful")) {
+                if (result.contains("Updated")) {
                     String[] userDetails = result.split("-");
+
+                    storeArrayList = storeRowArrayList;
+                    storeRowArrayList = new ArrayList<>();
+                    storeRowArrayList.addAll(storeArrayList);
+                    notifyItemRangeChanged(position,getItemCount());
+
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
@@ -302,90 +324,15 @@ public class StoreListTableAdapter extends RecyclerView.Adapter<StoreListTableAd
         }
     }
 
-    public class StoreDeleteTask extends AsyncTask<String, Void, String> {
-
-        Context context;
-        ProgressDialog dialog;
-        String TAG = ExpenseTableActivity.class.getSimpleName();
-//        String TAG = LoginActivity.LoginTask.class.getSimpleName();
-
-        public StoreDeleteTask(Context ctx) {
-            context = ctx;
+    protected boolean isOnline() {
+        ConnectivityManager cm = (ConnectivityManager) context.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+//        Log.d(TAG, "OnReceiveNetInfo: " + netInfo.getExtraInfo());
+        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
+            return true;
+        } else {
+            return false;
         }
-
-        @Override
-        protected void onPreExecute() {
-            dialog = new ProgressDialog(context);
-            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            dialog.setMessage("Loading. Please wait...");
-            dialog.setIndeterminate(true);
-            dialog.setCanceledOnTouchOutside(false);
-            dialog.show();
-        }
-
-        @Override
-        protected String doInBackground(String... strings) {
-
-            String store_id = strings[0];
-
-            try {
-                URL url = new URL(store_delete_url);
-                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-                httpURLConnection.setRequestMethod("POST");
-                httpURLConnection.setDoInput(true);
-                httpURLConnection.setDoOutput(true);
-                OutputStream outputStream = httpURLConnection.getOutputStream();
-                BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
-                String data = URLEncoder.encode("id", "UTF-8") + "=" + URLEncoder.encode(store_id, "UTF-8");
-                bufferedWriter.write(data);
-                bufferedWriter.flush();
-                bufferedWriter.close();
-                outputStream.close();
-                InputStream inputStream = httpURLConnection.getInputStream();
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "iso-8859-1"));
-                String response = "";
-                String line;
-                while ((line = bufferedReader.readLine()) != null) {
-                    response = response.concat(line);
-                }
-                bufferedReader.close();
-                inputStream.close();
-                httpURLConnection.disconnect();
-
-            }catch (MalformedURLException e){
-                e.printStackTrace();
-            }catch(IOException e){
-                e.printStackTrace();
-            }
-
-            HttpHandler httpHandler = new HttpHandler();
-            return httpHandler.makeServiceDelete(store_delete_url);
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-//            Log.d(TAG, "onPostExecute: " + result);
-
-            if (result != null) {
-                if(result.contains("Successfully")){
-                    if (this.dialog != null) {
-                        this.dialog.dismiss();
-                    }
-
-                    Toast.makeText(context, "successfully deleted", Toast.LENGTH_SHORT).show();
-                }else{
-                    Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_SHORT).show();
-                }
-
-
-            } else {
-                if (this.dialog != null) {
-                    this.dialog.dismiss();
-                }
-                Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
-            }
-        }
-
     }
 
 }

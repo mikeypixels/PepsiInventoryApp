@@ -71,7 +71,6 @@ public class SalesFragment extends Fragment implements AdapterView.OnItemSelecte
     String sales_url,store_id,user_id;
     Spinner store_spinner;
     Spinner spinner;
-    String stock_reducing_url, stock_url;
     ArrayList<Stock> stockArrayList = new ArrayList<>();
 
     private static final String TAG_HOME = "Sales";
@@ -92,9 +91,7 @@ public class SalesFragment extends Fragment implements AdapterView.OnItemSelecte
         spinner = view.findViewById(R.id.spinner);
 
 
-        sales_url = getString(R.string.serve_url) + "add_sales.php";
-        stock_reducing_url = getString(R.string.serve_url) + "stock_update.php";
-        stock_url = getString(R.string.serve_url) + "stocks.php";
+        sales_url = getString(R.string.serve_url) + "sale/add";
 
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(container.getContext(),R.array.products, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -144,32 +141,47 @@ public class SalesFragment extends Fragment implements AdapterView.OnItemSelecte
                             SimpleDateFormat sdf = new SimpleDateFormat(myFormat);
 
                             Log.d(TAG, "OnReceiveSaleDate: " + sdf.format(myCalendar.getTime()));
-                            if (isOnline()) {
+
                                 if(spinner.getSelectedItem().toString().equals("Crate")) {
                                     Date date = new Date();
                                     Log.d(TAG,"OnReceive: " + user_id);
                                     cost = Integer.parseInt(quantity_txt.getText().toString())*9800;
 
                                     Log.d(TAG, "OnReceiveDate: " + databaseDate);
-                                    new AddSalesTask(getContext()).execute("1",preferences.getString("store_id", ""),quantity_txt.getText().toString(),String.valueOf(cost), databaseDate,preferences.getString("user_id",""));
+                                    if(isOnline())
+                                        new AddSalesTask(getContext()).execute("1",preferences.getString("store_id", ""),quantity_txt.getText().toString(),String.valueOf(cost), databaseDate,preferences.getString("user_id",""));
+                                    else
+                                        Toast.makeText(getContext(), "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
                                 }else if(spinner.getSelectedItem().toString().equals("Full shell")){
                                     Log.d(TAG,"OnReceive: " + user_id);
                                     cost = Integer.parseInt(quantity_txt.getText().toString())*19800;
                                     Log.d(TAG, "OnReceiveDate: " + sdf.format(myCalendar.getTime()));
-                                    new AddSalesTask(getContext()).execute("2",store_id,quantity_txt.getText().toString(),String.valueOf(cost), databaseDate,user_id);
+                                    if(isOnline())
+                                        new AddSalesTask(getContext()).execute("2",preferences.getString("store_id", ""),quantity_txt.getText().toString(),String.valueOf(cost), databaseDate,preferences.getString("user_id",""));
+                                    else
+                                        Toast.makeText(getContext(), "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
                                 }
                                 else if(spinner.getSelectedItem().toString().equals("Bottle")){
 
                                     cost = Integer.parseInt(quantity_txt.getText().toString())*300;
                                     Log.d(TAG, "OnReceiveDate: " + sdf.format(myCalendar.getTime()));
-                                    new AddSalesTask(getContext()).execute("3",store_id,quantity_txt.getText().toString(),String.valueOf(cost), databaseDate,user_id);
+                                    if(isOnline())
+                                        new AddSalesTask(getContext()).execute("3",preferences.getString("store_id", ""),quantity_txt.getText().toString(),String.valueOf(cost), databaseDate,preferences.getString("user_id",""));
+                                    else
+                                        Toast.makeText(getContext(), "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
+                                }
+                                else if(spinner.getSelectedItem().toString().equals("Takeaway")){
+
+                                    cost = Integer.parseInt(quantity_txt.getText().toString())*9000;
+                                    if(isOnline())
+                                        new AddSalesTask(getContext()).execute("4",preferences.getString("store_id", ""),quantity_txt.getText().toString(),String.valueOf(cost), databaseDate,preferences.getString("user_id",""));
+                                    else
+                                        Toast.makeText(getContext(), "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
+
                                 }
                             } else {
-                                Toast.makeText(getContext(), "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
+                                textView.setText("quantity should be a number!");
                             }
-                        } else {
-                            textView.setText("quantity should be in currency format!");
-                        }
                     }
                 }else{
                     textView.setText("please select product!");
@@ -255,12 +267,12 @@ public class SalesFragment extends Fragment implements AdapterView.OnItemSelecte
         @Override
         protected void onPostExecute(String result) {
             Log.d(TAG, "onPostExecute: " + result);
-            Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
 
             if (result != null)
             {
-                if (result.contains("Successful")) {
+                if (result.contains("Added")) {
                     String[] userDetails = result.split("-");
+                    Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
                     quantity_txt.setText("");
                     datepicker.setText("");
                     spinner.setSelection(0);

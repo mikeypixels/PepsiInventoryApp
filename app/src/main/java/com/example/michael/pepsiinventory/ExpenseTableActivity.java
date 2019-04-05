@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -19,6 +21,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.SearchView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -40,11 +43,14 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
-public class ExpenseTableActivity extends AppCompatActivity {
+public class ExpenseTableActivity extends AppCompatActivity implements ExpenseInterface{
 
     RecyclerView recyclerView;
     RecyclerView.LayoutManager layoutManager;
@@ -54,7 +60,7 @@ public class ExpenseTableActivity extends AppCompatActivity {
     TextView sn, product_name, quantity, amount, date, textView;
     android.support.v7.widget.Toolbar toolbar;
     CollapsingToolbarLayout collapsingToolbarLayout;
-    String intentFragment, expense_url, expense_update_url, user_id, store_id;
+    String intentFragment, expense_url, user_id, store_id;
     ArrayList<ExpenseRow> expenseRowArrayList = new ArrayList<>();
     ArrayList<ExpenseRow> expenseRows = new ArrayList<>();
     ArrayList<ExpenseRow> expenseArrayList = new ArrayList<>();
@@ -62,6 +68,7 @@ public class ExpenseTableActivity extends AppCompatActivity {
     Snackbar snackbar;
     double total = 0;
     CoordinatorLayout coordinatorLayout;
+    ImageView imageView;
 
     public ExpenseTableActivity() {
         //required empty constructor
@@ -77,8 +84,12 @@ public class ExpenseTableActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbar);
         collapsingToolbarLayout = findViewById(R.id.collapsingToolbar);
         textView = findViewById(R.id.textView);
+        imageView = findViewById(R.id.imageView);
 
-        expense_url = getString(R.string.serve_url) + "expenses.php";
+        imageView.setVisibility(View.INVISIBLE);
+        textView.setVisibility(View.INVISIBLE);
+
+        expense_url = getString(R.string.serve_url) + "expenses";
 
         toolbar.setNavigationIcon(getResources().getDrawable(R.drawable.ic_arrow_back));
 
@@ -98,7 +109,10 @@ public class ExpenseTableActivity extends AppCompatActivity {
 
         recyclerView.setLayoutManager(layoutManager);
 
-        new ExpenseLoadingTask(ExpenseTableActivity.this).execute();
+        if(isOnline())
+            new ExpenseLoadingTask(ExpenseTableActivity.this).execute();
+        else
+            Toast.makeText(this, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
 
     }
 
@@ -126,7 +140,7 @@ public class ExpenseTableActivity extends AppCompatActivity {
                     }
                 }
 
-                expenseTableAdapter = new ExpenseTableAdapter(ExpenseTableActivity.this,expenseRows);
+                expenseTableAdapter = new ExpenseTableAdapter(ExpenseTableActivity.this, expenseRows, ExpenseTableActivity.this);
                 recyclerView.setAdapter(expenseTableAdapter);
                 expenseTableAdapter.notifyDataSetChanged();
 
@@ -168,7 +182,7 @@ public class ExpenseTableActivity extends AppCompatActivity {
                     }
                 }
 
-                expenseTableAdapter = new ExpenseTableAdapter(ExpenseTableActivity.this,expenseRows);
+                expenseTableAdapter = new ExpenseTableAdapter(ExpenseTableActivity.this,expenseRows, ExpenseTableActivity.this);
                 recyclerView.setAdapter(expenseTableAdapter);
                 expenseTableAdapter.notifyDataSetChanged();
 
@@ -204,6 +218,44 @@ public class ExpenseTableActivity extends AppCompatActivity {
     }
 
     @Override
+    public void showSnackBar(double total, String store_id, String store_name) {
+        NumberFormat formatter = new DecimalFormat("#,###");
+        String formattedNumber = formatter.format(total);
+
+            snackbar = Snackbar
+                    .make(coordinatorLayout, "Today's total Expenses: " + formattedNumber + " Tshs", Snackbar.LENGTH_INDEFINITE)
+                    .setAction("OK", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            snackbar.dismiss();
+                        }
+                    });
+            total = 0;
+
+        // Changing message text color
+        snackbar.setActionTextColor(Color.RED);
+
+        // Changing action button text color
+        View sbView = snackbar.getView();
+        TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+        textView.setTextColor(Color.YELLOW);
+        snackbar.show();
+    }
+
+    @Override
+    public void getPosition(ExpenseRow expenseRow) {
+        int position = 0;
+        for(int i = 0; i < expenseRowArrayList.size(); i++){
+            if(expenseRowArrayList.get(i).equals(expenseRow)) {
+                expenseRowArrayList.remove(expenseRow);
+                position = i;
+            }
+        }
+        expenseTableAdapter.notifyItemRemoved(position+1);
+        expenseTableAdapter.notifyItemRangeChanged(position+1, expenseRowArrayList.size());
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId()==android.R.id.home)
             finish();
@@ -225,6 +277,7 @@ public class ExpenseTableActivity extends AppCompatActivity {
         Intent intent = new Intent(ExpenseTableActivity.this, MainActivity.class);
         intent.putExtra("frgToLoad", intentFragment);
         startActivity(intent);
+        finish();
     }
 
     public class ExpenseLoadingTask extends AsyncTask<Void, Void, String> {
@@ -262,13 +315,13 @@ public class ExpenseTableActivity extends AppCompatActivity {
 
                 try {
                     JSONObject jsonObject = new JSONObject(result);
-                    JSONArray jsonArray = jsonObject.getJSONArray("expenses");
+                    JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                     if (jsonArray.length() > 0) {
                         for (int i = 0; i < jsonArray.length(); i++) {
                             expenseRowArrayList.add(new ExpenseRow(jsonArray.getJSONObject(i).getString("id"),
-                                    jsonArray.getJSONObject(i).getString("name"),
-                                    jsonArray.getJSONObject(i).getString("amount"),
+                                    jsonArray.getJSONObject(i).getString("expense_name"),
+                                    jsonArray.getJSONObject(i).getString("cost"),
                                     jsonArray.getJSONObject(i).getString("description"),
                                     jsonArray.getJSONObject(i).getString("date"),
                                     jsonArray.getJSONObject(i).getString("store_id")));
@@ -280,22 +333,28 @@ public class ExpenseTableActivity extends AppCompatActivity {
                         for (int i = 0; i < expenseRowArrayList.size(); i++) {
                             if (myPrefs.getString("store_id", "").equals(expenseRowArrayList.get(i).getStore_id())) {
                                 expenseArrayList.add(expenseRowArrayList.get(i));
-                                total = total + Double.parseDouble(expenseRowArrayList.get(i).getAmount());
+                                if(expenseRowArrayList.get(i).getDate().equals(getDateTime()))
+                                    total = total + Double.parseDouble(expenseRowArrayList.get(i).getAmount());
                             }
                         }
 
-                        if (expenseArrayList.isEmpty())
+                        if (expenseArrayList.isEmpty()) {
+                            imageView.setVisibility(View.VISIBLE);
+                            textView.setText("Oops... No Expenses Found!");
                             textView.setVisibility(View.VISIBLE);
-                        else
+                        }
+                        else {
+                            imageView.setVisibility(View.INVISIBLE);
                             textView.setVisibility(View.INVISIBLE);
+                        }
 
-                        expenseTableAdapter = new ExpenseTableAdapter(ExpenseTableActivity.this,expenseArrayList);
+                        expenseTableAdapter = new ExpenseTableAdapter(ExpenseTableActivity.this, expenseArrayList, ExpenseTableActivity.this);
                         recyclerView.setAdapter(expenseTableAdapter);
 
                         NumberFormat formatter = new DecimalFormat("#,###");
                         String formattedNumber = formatter.format(total);
                         snackbar = Snackbar
-                                .make(coordinatorLayout, "Total expenses: " + formattedNumber + " Tshs", Snackbar.LENGTH_INDEFINITE)
+                                .make(coordinatorLayout, "Today's total expenses: " + formattedNumber + " Tshs", Snackbar.LENGTH_INDEFINITE)
                                 .setAction("OK", new View.OnClickListener() {
                                     @Override
                                     public void onClick(View view) {
@@ -321,7 +380,9 @@ public class ExpenseTableActivity extends AppCompatActivity {
                         if (this.dialog != null) {
                             this.dialog.dismiss();
                         }
-                        Toast.makeText(context, "Oops... No stores found!", Toast.LENGTH_LONG).show();
+                        imageView.setVisibility(View.VISIBLE);
+                        textView.setText("Oops... No Expenses Found!");
+                        textView.setVisibility(View.VISIBLE);
                     }
 
 
@@ -341,5 +402,23 @@ public class ExpenseTableActivity extends AppCompatActivity {
             }
         }
 
+    }
+
+    protected boolean isOnline() {
+        String TAG = LoginActivity.class.getSimpleName();
+        ConnectivityManager cm = (ConnectivityManager) ExpenseTableActivity.this.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+//        Log.d(TAG, "OnReceiveNetInfo: " + netInfo.getExtraInfo());
+        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private String getDateTime(){
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date date = new Date();
+        return dateFormat.format(date);
     }
 }

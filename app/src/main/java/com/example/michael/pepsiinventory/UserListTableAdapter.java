@@ -6,9 +6,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
@@ -43,27 +46,29 @@ import static com.bumptech.glide.gifdecoder.GifHeaderParser.TAG;
 public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdapter.UserListViewHolder> {
 
     private ArrayList<User> userRowArrayList;
+    private ArrayList<User> userArrayList;
     Context context;
     TextView user_no, f_name, l_name, role, status;
     Button edit_btn, status_btn, delete_btn, save_btn, cancel_btn;
-    String user_update_url = "http://192.168.43.174/pepsi/user_update.php";
-    String user_delete_url = "http://192.168.43.174/pepsi/delete_user.php";
-    TextView usr_id, ustatus, u_status_txt;
+    String user_update_url;
+    String user_delete_url;
+    TextView usr_id, ustatus;
     EditText fName, lName, urole;
     RadioButton adminbtn, workerbtn;
     String new_role, u_status;
-    SharedPreferences preferences;
-    Spinner cast_storeSpinner;
+    UserInterface userInterface;
+    int position;
 
-    public UserListTableAdapter(Context context, ArrayList<User> userList) {
+    public UserListTableAdapter(Context context, ArrayList<User> userList, UserInterface userInterface) {
         this.context = context;
         userRowArrayList = userList;
+        this.userInterface = userInterface;
     }
 
     public static class UserListViewHolder extends RecyclerView.ViewHolder {
 
         TextView user_id, f_name, l_name, gender, status;
-        LinearLayout tableRow;
+        ConstraintLayout tableRow;
 
         public UserListViewHolder(View itemView) {
             super(itemView);
@@ -85,13 +90,13 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
     }
 
     @Override
-    public void onBindViewHolder(@NonNull UserListTableAdapter.UserListViewHolder userListViewHolder, int i) {
+    public void onBindViewHolder(@NonNull final UserListTableAdapter.UserListViewHolder userListViewHolder, int i) {
 
         if (i == 0) {
             userListViewHolder.tableRow.setBackgroundColor(Color.parseColor("#222F48"));
             userListViewHolder.tableRow.setPadding(13, 13, 13, 13);
 //            expenseViewHolder.tableRow.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
-            userListViewHolder.user_id.setText("US/#");
+            userListViewHolder.user_id.setText("US/id");
             userListViewHolder.user_id.setTextColor(Color.parseColor("#ffffff"));
             userListViewHolder.f_name.setText("first name");
 //            expenseViewHolder.expense_name.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
@@ -105,7 +110,6 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
 
         } else if (i > 0) {
 
-            userListViewHolder.tableRow.setBackgroundColor(Color.parseColor("#efefef"));
             userListViewHolder.tableRow.setPadding(13, 13, 13, 13);
 //            expenseViewHolder.tableRow.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
             userListViewHolder.user_id.setTextColor(Color.parseColor("#000000"));
@@ -124,14 +128,14 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
             userListViewHolder.status.setText(userRowArrayList.get(i - 1).getStatus());
 //            userListViewHolder.status.setBackgroundColor(Color.parseColor("#228B22"));
 
-            final User salesRow = userRowArrayList.get(i - 1);
+            final User user = userRowArrayList.get(i - 1);
 
             userListViewHolder.tableRow.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
 //                            Intent intent = new Intent(context,PopUpActivity.class);
 //                            intent.putExtra("message","animation beauty");
-//                            intent.putExtra("sale",new Gson().toJson(salesRow));
+//                            intent.putExtra("sale",new Gson().toJson(user));
 //                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 //                            context.startActivity(intent);
                     final Dialog dialognew = new Dialog(context);
@@ -152,11 +156,11 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
                     delete_btn = dialognew.findViewById(R.id.delete);
                     status_btn = dialognew.findViewById(R.id.status_btn);
 
-                    user_no.setText(salesRow.getUser_id());
-                    f_name.setText(salesRow.getF_name());
-                    l_name.setText(salesRow.getL_name());
-                    role.setText(salesRow.getRole());
-                    status.setText(salesRow.getStatus());
+                    user_no.setText(user.getUser_id());
+                    f_name.setText(user.getF_name());
+                    l_name.setText(user.getL_name());
+                    role.setText(user.getRole());
+                    status.setText(user.getStatus());
 
                     if (status.getText().toString().toLowerCase().equals("active")) {
                         status_btn.setText("Deactivate");
@@ -169,7 +173,7 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
 
                     dialognew.show();
 
-                    if (!salesRow.getRole().equals("Main Admin")) {
+                    if (!user.getRole().equals("Main Admin")) {
                         status_btn.setVisibility(View.VISIBLE);
                     } else {
                         status_btn.setVisibility(View.GONE);
@@ -188,7 +192,13 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
                                 builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
-                                        new UpdateUserTask(context).execute(user_no.getText().toString(), f_name.getText().toString(), l_name.getText().toString(), role.getText().toString(), status.getText().toString());
+                                        if(isOnline()) {
+                                            userRowArrayList.get(userListViewHolder.getAdapterPosition() - 1).setStatus("active");
+                                            u_status = "active";
+                                            new UpdateUserTask(context).execute(user_no.getText().toString(), f_name.getText().toString(), l_name.getText().toString(), role.getText().toString(), u_status);
+                                        }else{
+                                            Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
+                                        }
                                     }
                                 });
 
@@ -205,7 +215,6 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
                                 status_btn.setText("Deactivate");
                                 status_btn.setBackgroundResource(R.drawable.deactive_bg);
                                 status.setText("active");
-                                u_status = "active";
 
                             } else {
 
@@ -217,7 +226,13 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
                                 builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
-                                        new UpdateUserTask(context).execute(user_no.getText().toString(), f_name.getText().toString(), l_name.getText().toString(), role.getText().toString(), status.getText().toString());
+                                        if(isOnline()) {
+                                            userRowArrayList.get(userListViewHolder.getAdapterPosition() - 1).setStatus("deactive");
+                                            u_status = "deactive";
+                                            new UpdateUserTask(context).execute(user_no.getText().toString(), f_name.getText().toString(), l_name.getText().toString(), role.getText().toString(), u_status);
+                                        } else{
+                                            Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
+                                        }
                                     }
                                 });
 
@@ -234,7 +249,6 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
                                 status_btn.setText("Activate");
                                 status_btn.setBackgroundResource(R.drawable.active_bg);
                                 status.setText("deactive");
-                                u_status = "deactive";
                             }
                         }
                     });
@@ -242,18 +256,17 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
                     edit_btn.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            Log.d(TAG, "OnEditStatus: " + u_status);
                             dialognew.setContentView(R.layout.user_edit_layout);
 
                             usr_id = dialognew.findViewById(R.id.user_no);
-                            usr_id.setText(salesRow.getUser_id());
+                            usr_id.setText(user.getUser_id());
                             fName = dialognew.findViewById(R.id.f_name);
-                            fName.setText(salesRow.getF_name());
+                            fName.setText(user.getF_name());
                             lName = dialognew.findViewById(R.id.l_name);
-                            lName.setText(salesRow.getL_name());
+                            lName.setText(user.getL_name());
                             adminbtn = dialognew.findViewById(R.id.admin);
                             workerbtn = dialognew.findViewById(R.id.worker);
-                            if (salesRow.getRole().equals("Admin") || salesRow.getRole().equals("Main Admin"))
+                            if (user.getRole().equals("Admin") || user.getRole().equals("Main Admin"))
                                 adminbtn.setChecked(true);
                             else
                                 workerbtn.setChecked(true);
@@ -282,8 +295,21 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
                             save_btn.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
+                                    position = userListViewHolder.getAdapterPosition() - 1;
                                     if (!fName.getText().toString().isEmpty() || !lName.getText().toString().isEmpty()) {
-                                        new UpdateUserTask(context).execute(usr_id.getText().toString(), fName.getText().toString(), lName.getText().toString(), new_role, ustatus.getText().toString());
+                                        if(isOnline()) {
+                                            userRowArrayList.get(userListViewHolder.getAdapterPosition() - 1).setF_name(fName.getText().toString());
+                                            userRowArrayList.get(userListViewHolder.getAdapterPosition() - 1).setL_name(lName.getText().toString());
+                                            if(adminbtn.isChecked()) {
+                                                userRowArrayList.get(userListViewHolder.getAdapterPosition() - 1).setRole(adminbtn.getText().toString());
+                                                new UpdateUserTask(context).execute(usr_id.getText().toString(), fName.getText().toString(), lName.getText().toString(), adminbtn.getText().toString(), ustatus.getText().toString());
+                                            }
+                                            else if(workerbtn.isChecked()) {
+                                                userRowArrayList.get(userListViewHolder.getAdapterPosition() - 1).setRole(workerbtn.getText().toString());
+                                                new UpdateUserTask(context).execute(usr_id.getText().toString(), fName.getText().toString(), lName.getText().toString(), workerbtn.getText().toString(), ustatus.getText().toString());
+                                            }
+                                        } else
+                                            Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
                                         dialognew.dismiss();
                                     } else {
                                         Toast.makeText(context, "please fill all fields", Toast.LENGTH_SHORT).show();
@@ -301,11 +327,10 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
                         }
                     });
 
-                    if (!salesRow.getRole().equals("Main Admin")) {
+                    if (!user.getRole().equals("Main Admin")) {
                         delete_btn.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                Log.d(TAG, "It reaches here for some good reason");
 
                                 AlertDialog.Builder builder = new AlertDialog.Builder(context);
 
@@ -315,7 +340,11 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
                                 builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
-                                        new UserDeleteTask(context).execute(user_no.getText().toString());
+                                        position = userListViewHolder.getAdapterPosition() - 1;
+                                        if (isOnline())
+                                            new UserDeleteTask(context).execute(user_no.getText().toString());
+                                        else
+                                            Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
                                         dialognew.dismiss();
                                     }
                                 });
@@ -353,10 +382,22 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
         return userRowArrayList.size() + 1;
     }
 
+    protected boolean isOnline() {
+        ConnectivityManager cm = (ConnectivityManager) context.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+//        Log.d(TAG, "OnReceiveNetInfo: " + netInfo.getExtraInfo());
+        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public class UpdateUserTask extends AsyncTask<String, Void, String> {
 
         ProgressDialog dialog;
         Context context;
+        String TAG = UserListTableAdapter.class.getSimpleName();
 
         public UpdateUserTask(Context ctx) {
             this.context = ctx;
@@ -381,10 +422,12 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
             String user_role = strings[3];
             String user_status = strings[4];
 
+            user_update_url = this.context.getString(R.string.serve_url) + "user/edit/" + user_id;
+
             try {
                 URL url = new URL(user_update_url);
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-                httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.setRequestMethod("PUT");
                 httpURLConnection.setDoInput(true);
                 httpURLConnection.setDoOutput(true);
                 OutputStream outputStream = httpURLConnection.getOutputStream();
@@ -422,11 +465,15 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
         @Override
         protected void onPostExecute(String result) {
             Log.d(TAG, "onPostExecute: " + result);
-            Toast.makeText(context, "Status successfully changed!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
 
             if (result != null) {
-                if (result.contains("Successful")) {
+                if (result.contains("Updated")) {
                     String[] userDetails = result.split("-");
+                    userArrayList = userRowArrayList;
+                    userRowArrayList = new ArrayList<>();
+                    userRowArrayList.addAll(userArrayList);
+                    notifyItemRangeChanged(position, getItemCount());
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
@@ -450,7 +497,7 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
 
         Context context;
         ProgressDialog dialog;
-        String TAG = ExpenseTableActivity.class.getSimpleName();
+        String TAG = UserListTableAdapter.class.getSimpleName();
 //        String TAG = LoginActivity.LoginTask.class.getSimpleName();
 
         public UserDeleteTask(Context ctx) {
@@ -470,17 +517,18 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
         @Override
         protected String doInBackground(String... strings) {
 
-            String exp_id = strings[0];
+            String user_id = strings[0];
+            user_delete_url = this.context.getString(R.string.serve_url) + "user/delete/" + user_id;
 
             try {
                 URL url = new URL(user_delete_url);
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-                httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.setRequestMethod("DELETE");
                 httpURLConnection.setDoInput(true);
                 httpURLConnection.setDoOutput(true);
                 OutputStream outputStream = httpURLConnection.getOutputStream();
                 BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
-                String data = URLEncoder.encode("id", "UTF-8") + "=" + URLEncoder.encode(exp_id, "UTF-8");
+                String data = URLEncoder.encode("id", "UTF-8") + "=" + URLEncoder.encode(user_id, "UTF-8");
                 bufferedWriter.write(data);
                 bufferedWriter.flush();
                 bufferedWriter.close();
@@ -511,12 +559,15 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
 //            Log.d(TAG, "onPostExecute: " + result);
 
             if (result != null) {
-                if (result.contains("Successfully")) {
+                if (result.contains("Deleted")) {
+                    userInterface.getPosition(userRowArrayList.get(position));
+                    userRowArrayList.remove(userRowArrayList.get(position));
+                    notifyItemRemoved(position);
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
 
-                    Toast.makeText(context, "successfully deleted", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_SHORT).show();
                 }
@@ -531,9 +582,4 @@ public class UserListTableAdapter extends RecyclerView.Adapter<UserListTableAdap
         }
 
     }
-
-    public void getSpinner(Spinner spinner) {
-        cast_storeSpinner = spinner;
-    }
-
 }

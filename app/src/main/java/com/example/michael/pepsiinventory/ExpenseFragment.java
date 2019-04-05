@@ -5,6 +5,8 @@ import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -70,7 +72,7 @@ public class ExpenseFragment extends Fragment {
         send1 = view.findViewById(R.id.send1);
         action_bar = view.findViewById(R.id.action_bar);
 
-        expense_url = getString(R.string.serve_url) + "add_expense.php";
+        expense_url = getString(R.string.serve_url) + "expense/add";
 
         final DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener() {
             @Override
@@ -101,20 +103,23 @@ public class ExpenseFragment extends Fragment {
                 SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.getDefault());
 
                 Log.d(TAG, "onReceiving: " + datepicker.getText().toString());
+
                     if (amount.getText().toString().isEmpty() || name.getText().toString().isEmpty() || datepicker.getText().toString().isEmpty()) {
                         action_bar.setText("please fill all fields!");
                     } else {
                         String[] dateArray = datepicker.getText().toString().split("/");
                         String databaseDate = dateArray[2].concat("-" + dateArray[1] + "-" + dateArray[0]);
-                        if (intChecker.Checker(amount.getText().toString().replaceAll(",",""))) {
+                        if (intChecker.Checker(amount.getText().toString().replaceAll(",", ""))) {
                             action_bar.setText("");
-                            new AddExpenseTask(getContext()).execute(preferences.getString("store_id", ""),databaseDate,name.getText().toString(),description.getText().toString(),amount.getText().toString().replaceAll(",",""),user_id);
+                            if(isOnline())
+                                new AddExpenseTask(getContext()).execute(preferences.getString("store_id", ""), databaseDate, name.getText().toString(), description.getText().toString(), amount.getText().toString().replaceAll(",", ""), preferences.getString("user_id", ""));
+                            else
+                                Toast.makeText(getContext(), "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
                         } else {
                             action_bar.setText("amount should be in currency format!");
                         }
                     }
-
-                }
+            }
 
         });
 
@@ -194,12 +199,12 @@ public class ExpenseFragment extends Fragment {
         @Override
         protected void onPostExecute(String result) {
             Log.d(TAG, "onPostExecute: " + result);
-            Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
 
             if (result != null)
             {
-                if (result.contains("Successful")) {
+                if (result.contains("Added")) {
                     String[] userDetails = result.split("-");
+                    Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
                     name.setText("");
                     amount.setText("");
                     description.setText("");
@@ -234,4 +239,13 @@ public class ExpenseFragment extends Fragment {
         datepicker.setText(sdf.format(myCalendar.getTime()));
     }
 
+    protected boolean isOnline() {
+        ConnectivityManager cm = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

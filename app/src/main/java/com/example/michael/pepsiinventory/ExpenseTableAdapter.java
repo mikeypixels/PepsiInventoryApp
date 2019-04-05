@@ -8,9 +8,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
@@ -42,39 +45,44 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 
 public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapter.ExpenseViewHolder> {
 
     Context context;
-    private ArrayList<ExpenseRow> expenseRowArrayList = new ArrayList<>();
+    private ArrayList<ExpenseRow> expenseRowArrayList;
+    private ArrayList<ExpenseRow> expenseArrayList;
 
     TextView sn, product, description, amnt, datepick;
     Button editButton, deleteButton, saveButton, cancelButton;
     EditText pName, description0, amt, dateV;
     TextView sNo;
-    ExpenseTableActivity expTable = new ExpenseTableActivity();
-    String expense_update_url = "http://192.168.43.174/pepsi/expense_update.php";
-    String expense_delete_url = "http://192.168.43.174/pepsi/delete_expense.php";
+    String expense_update_url;
+    String expense_delete_url;
     final Calendar myCalendar = Calendar.getInstance();
     IntChecker intChecker = new IntChecker();
+    ExpenseInterface expenseInterface;
+    int position;
 
     final static public String TAG = ExpenseTableAdapter.class.getSimpleName();
 
-    public ExpenseTableAdapter(Context context, ArrayList<ExpenseRow> expenseRows) {
+    public ExpenseTableAdapter(Context context, ArrayList<ExpenseRow> expenseRows, ExpenseInterface expenseInterface) {
         this.context = context;
+        this.expenseInterface = expenseInterface;
         expenseRowArrayList = expenseRows;
     }
 
     public class ExpenseViewHolder extends RecyclerView.ViewHolder {
 
         TextView no, expense_name, amount, date;
-        LinearLayout tableRow;
+        ConstraintLayout tableRow;
 
         public ExpenseViewHolder(View itemView) {
             super(itemView);
@@ -93,7 +101,7 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ExpenseTableAdapter.ExpenseViewHolder expenseViewHolder, int i) {
+    public void onBindViewHolder(@NonNull final ExpenseTableAdapter.ExpenseViewHolder expenseViewHolder, int i) {
         if (i == 0) {
             expenseViewHolder.tableRow.setBackgroundColor(Color.parseColor("#222F48"));
             expenseViewHolder.tableRow.setPadding(13, 13, 13, 13);
@@ -202,8 +210,14 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
                                 @Override
                                 public void onClick(View v) {
 
-                                    String[] dateArray = dateV.getText().toString().split("-");
-                                    String databaseDate = dateArray[2].concat("-" + dateArray[1] + "-" + dateArray[0]);
+                                    String[] dateArray;
+                                    String databaseDate;
+                                    if(dateV.getText().toString().contains("/")) {
+                                        dateArray = dateV.getText().toString().split("/");
+                                        databaseDate = "20" + dateArray[2].concat("-" + dateArray[1] + "-" + dateArray[0]);
+                                    }else{
+                                        databaseDate = dateV.getText().toString();
+                                    }
 
                                     final SharedPreferences myPrefs = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
                                     Log.d(TAG,"OnExpenseTabel: " + amt.getText().toString());
@@ -211,7 +225,15 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
                                     if(!pName.getText().toString().isEmpty()&&!amt.getText().toString().isEmpty()) {
                                         Log.d(TAG,"OnExpenseTabel: " + amt.getText().toString());
                                         if(intChecker.Checker(amt.getText().toString().replaceAll(",",""))) {
-                                            new UpdateExpenseTask(context).execute(myPrefs.getString("store_id", ""), databaseDate, pName.getText().toString(), description0.getText().toString(), amt.getText().toString().replaceAll(",", ""), myPrefs.getString("user_id", ""), sNo.getText().toString());
+                                            position = expenseViewHolder.getAdapterPosition()-1;
+                                            if(isOnline()) {
+                                                expenseRowArrayList.get(expenseViewHolder.getAdapterPosition()-1).setDescription(description0.getText().toString());
+                                                expenseRowArrayList.get(expenseViewHolder.getAdapterPosition()-1).setExpense_name(pName.getText().toString());
+                                                expenseRowArrayList.get(expenseViewHolder.getAdapterPosition()-1).setDate(databaseDate);
+                                                expenseRowArrayList.get(expenseViewHolder.getAdapterPosition()-1).setAmount(amt.getText().toString().replaceAll(",",""));
+                                                new UpdateExpenseTask(context).execute(myPrefs.getString("store_id", ""), databaseDate, pName.getText().toString(), description0.getText().toString(), amt.getText().toString().replaceAll(",", ""), myPrefs.getString("user_id", ""), sNo.getText().toString());
+                                            } else
+                                                Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
                                             dialognew.dismiss();
                                         }else
                                             Toast.makeText(context, "amount should be in number format!", Toast.LENGTH_SHORT).show();
@@ -244,7 +266,11 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
                             builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    new ExpenseDeleteTask(context).execute(sn.getText().toString());
+                                    position = expenseViewHolder.getAdapterPosition()-1;
+                                    if(isOnline())
+                                        new ExpenseDeleteTask(context).execute(sn.getText().toString());
+                                    else
+                                        Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
                                     dialognew.dismiss();
                                 }
                             });
@@ -272,11 +298,29 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
         return expenseRowArrayList.size() + 1;
     }
 
+    protected boolean isOnline() {
+        String TAG = LoginActivity.class.getSimpleName();
+        ConnectivityManager cm = (ConnectivityManager) context.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+//        Log.d(TAG, "OnReceiveNetInfo: " + netInfo.getExtraInfo());
+        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private void updateLabel(){
         String myFormat = "dd/MM/yy";
         SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.getDefault());
 
         dateV.setText(sdf.format(myCalendar.getTime()));
+    }
+
+    private String getDateTime(){
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date date = new Date();
+        return dateFormat.format(date);
     }
 
     public class UpdateExpenseTask extends AsyncTask<String, Void, String> {
@@ -308,6 +352,8 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
             String exp_cost = strings[4];
             String exp_user_id = strings[5];
             String exp_id = strings[6];
+
+            expense_update_url = this.context.getResources().getString(R.string.serve_url) + "expense/edit/" + exp_id;
 
             Log.d(TAG, "doInBackground: " + exp_user_id);
 
@@ -357,8 +403,13 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
             Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
 
             if (result != null) {
-                if (result.contains("Successful")) {
+                if (result.contains("Updated")) {
                     String[] userDetails = result.split("-");
+                    Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
+                    expenseArrayList = expenseRowArrayList;
+                    expenseRowArrayList = new ArrayList<>();
+                    expenseRowArrayList.addAll(expenseArrayList);
+                    notifyItemRangeChanged(position,getItemCount());
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
@@ -404,10 +455,12 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
 
             String exp_id = strings[0];
 
+            expense_delete_url = this.context.getResources().getString(R.string.serve_url) + "expense/delete/" + exp_id;
+
             try {
                 URL url = new URL(expense_delete_url);
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-                httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.setRequestMethod("DELETE");
                 httpURLConnection.setDoInput(true);
                 httpURLConnection.setDoOutput(true);
                 OutputStream outputStream = httpURLConnection.getOutputStream();
@@ -443,7 +496,22 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
 //            Log.d(TAG, "onPostExecute: " + result);
 
             if (result != null) {
-                if(result.contains("Successfully")){
+                if(result.contains("Deleted")){
+                    expenseInterface.getPosition(expenseRowArrayList.get(position));
+                    expenseRowArrayList.remove(expenseRowArrayList.get(position));
+                    notifyItemRemoved(position);
+
+                    double total_amount = 0;
+
+                    for(int i = 0; i < expenseRowArrayList.size(); i++){
+                        if(expenseRowArrayList.get(i).getDate().equals(getDateTime()))
+                            total_amount = total_amount + Double.parseDouble(expenseRowArrayList.get(i).getAmount().replaceAll(",",""));
+                    }
+
+                    final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
+
+                    expenseInterface.showSnackBar(total_amount, preferences.getString("store_id",""), preferences.getString("store_name",""));
+
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }

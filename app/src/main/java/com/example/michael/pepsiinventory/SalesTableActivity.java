@@ -5,28 +5,26 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SearchView;
-import android.widget.TableLayout;
-import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,13 +32,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
-import static com.example.michael.pepsiinventory.MainActivity.navItemIndex;
-
-public class SalesTableActivity extends AppCompatActivity {
+public class SalesTableActivity extends AppCompatActivity implements SalesInterface {
 
     RecyclerView recyclerView;
     RecyclerView.LayoutManager layoutManager;
@@ -57,6 +57,7 @@ public class SalesTableActivity extends AppCompatActivity {
     CoordinatorLayout coordinatorLayout;
     double total = 0;
     TextView textView;
+    ImageView imageView;
 
     private final static String TAG = SalesTableActivity.class.getSimpleName();
 
@@ -76,8 +77,12 @@ public class SalesTableActivity extends AppCompatActivity {
         collapsingToolbarLayout = findViewById(R.id.collapsingToolbar);
         coordinatorLayout = findViewById(R.id.coordinatorLayout);
         textView = findViewById(R.id.textView);
+        imageView = findViewById(R.id.imageView);
 
-        sales_url = getString(R.string.serve_url) + "sales.php";
+        imageView.setVisibility(View.INVISIBLE);
+        textView.setVisibility(View.INVISIBLE);
+
+        sales_url = getString(R.string.serve_url) + "sales";
 
         toolbar.setNavigationIcon(getResources().getDrawable(R.drawable.ic_arrow_back));
 
@@ -96,8 +101,36 @@ public class SalesTableActivity extends AppCompatActivity {
 
         recyclerView.setLayoutManager(layoutManager);
 
-        new SalesLoadingTask(SalesTableActivity.this).execute();
+        if(isOnline())
+            new SalesLoadingTask(SalesTableActivity.this).execute();
+        else
+            Toast.makeText(this, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
 
+    }
+
+    @Override
+    public void showSnackBar(double total, String store_id, String store_name) {
+        NumberFormat formatter = new DecimalFormat("#,###");
+        String formattedNumber = formatter.format(total);
+
+        snackbar = Snackbar
+                .make(coordinatorLayout, "Today's total Sales: " + formattedNumber + " Tshs", Snackbar.LENGTH_INDEFINITE)
+                .setAction("OK", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        snackbar.dismiss();
+                    }
+                });
+        total = 0;
+
+        // Changing message text color
+        snackbar.setActionTextColor(Color.RED);
+
+        // Changing action button text color
+        View sbView = snackbar.getView();
+        TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+        textView.setTextColor(Color.YELLOW);
+        snackbar.show();
     }
 
     public class SalesLoadingTask extends AsyncTask<Void, Void, String> {
@@ -134,14 +167,14 @@ public class SalesTableActivity extends AppCompatActivity {
 
                 try {
                     JSONObject jsonObject = new JSONObject(result);
-                    JSONArray jsonArray = jsonObject.getJSONArray("sales");
+                    JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                     if (jsonArray.length() > 0) {
                         for (int i = 0; i < jsonArray.length(); i++) {
                             salesRowArrayList.add(new SalesRow(jsonArray.getJSONObject(i).getString("id"),
-                                    jsonArray.getJSONObject(i).getString("product"),
+                                    jsonArray.getJSONObject(i).getString("product_id"),
                                     jsonArray.getJSONObject(i).getString("quantity"),
-                                    jsonArray.getJSONObject(i).getString("amount"),
+                                    jsonArray.getJSONObject(i).getString("cost"),
                                     jsonArray.getJSONObject(i).getString("date"),
                                     jsonArray.getJSONObject(i).getString("store_id")));
 //                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("id"),jsonArray.getJSONObject(i).getString("name"),jsonArray.getJSONObject(i).getString("location")));
@@ -156,22 +189,28 @@ public class SalesTableActivity extends AppCompatActivity {
                             if(myPrefs.getString("store_id","").equals(salesRowArrayList.get(i).getStore_id())){
                                 salesArrayList.add(salesRowArrayList.get(i));
                                 Log.d(TAG,"OnReceivingIDs: " + myPrefs.getString("store_id","") + " " + salesRowArrayList.get(i).getStore_id());
-                                total = total + Double.parseDouble(salesRowArrayList.get(i).getAmount());
+                                if(salesRowArrayList.get(i).getDate().equals(getDateTime()))
+                                    total = total + Double.parseDouble(salesRowArrayList.get(i).getAmount());
                             }
                         }
 
-                        if (salesArrayList.isEmpty())
-                            textView.setText("SELECT STORE!");
-                        else
+                        if (salesArrayList.isEmpty()) {
+                            imageView.setVisibility(View.VISIBLE);
+                            textView.setText("Oops... No Sales Found!");
+                            textView.setVisibility(View.VISIBLE);
+                        }
+                        else {
+                            imageView.setVisibility(View.INVISIBLE);
                             textView.setVisibility(View.INVISIBLE);
+                        }
 
-                        salesTableAdapter = new SalesTableAdapter(SalesTableActivity.this,salesArrayList);
+                        salesTableAdapter = new SalesTableAdapter(SalesTableActivity.this, salesArrayList, SalesTableActivity.this);
                         recyclerView.setAdapter(salesTableAdapter);
 
                         NumberFormat formatter = new DecimalFormat("#,###");
                         String formattedNumber = formatter.format(total);
                         snackbar = Snackbar
-                                .make(coordinatorLayout, "Total sales: " + formattedNumber + " Tshs", Snackbar.LENGTH_INDEFINITE)
+                                .make(coordinatorLayout, "Today's total sales: " + formattedNumber + " Tshs", Snackbar.LENGTH_INDEFINITE)
                                 .setAction("OK", new View.OnClickListener() {
                                     @Override
                                     public void onClick(View view) {
@@ -197,7 +236,10 @@ public class SalesTableActivity extends AppCompatActivity {
                         if (this.dialog != null) {
                             this.dialog.dismiss();
                         }
-                        Toast.makeText(context, "Oops... No sales found!", Toast.LENGTH_LONG).show();
+
+                        imageView.setVisibility(View.VISIBLE);
+                        textView.setText("Oops... No Sales Found!");
+                        textView.setVisibility(View.VISIBLE);
                     }
 
 
@@ -217,6 +259,19 @@ public class SalesTableActivity extends AppCompatActivity {
             }
         }
 
+    }
+
+    @Override
+    public void getPosition(SalesRow salesRow) {
+        int position = 0;
+        for(int i = 0; i < salesRowArrayList.size(); i++){
+            if(salesRowArrayList.get(i).equals(salesRow)) {
+                salesRowArrayList.remove(salesRow);
+                position = i;
+            }
+        }
+        salesTableAdapter.notifyItemRemoved(position+1);
+        salesTableAdapter.notifyItemRangeChanged(position+1, salesRowArrayList.size());
     }
 
     @Override
@@ -242,7 +297,7 @@ public class SalesTableActivity extends AppCompatActivity {
                     }
                 }
 
-                salesTableAdapter = new SalesTableAdapter(SalesTableActivity.this, salesRows);
+                salesTableAdapter = new SalesTableAdapter(SalesTableActivity.this, salesRows, SalesTableActivity.this);
                 recyclerView.setAdapter(salesTableAdapter);
                 salesTableAdapter.notifyDataSetChanged();
 
@@ -285,7 +340,7 @@ public class SalesTableActivity extends AppCompatActivity {
                     }
                 }
 
-                salesTableAdapter = new SalesTableAdapter(SalesTableActivity.this, salesRows);
+                salesTableAdapter = new SalesTableAdapter(SalesTableActivity.this, salesRows, SalesTableActivity.this);
                 recyclerView.setAdapter(salesTableAdapter);
                 salesTableAdapter.notifyDataSetChanged();
 
@@ -339,6 +394,24 @@ public class SalesTableActivity extends AppCompatActivity {
         Intent intent = new Intent(SalesTableActivity.this,MainActivity.class);
         intent.putExtra("frgToLoad",intentFragment);
         startActivity(intent);
+    }
+
+    private String getDateTime(){
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date date = new Date();
+        return dateFormat.format(date);
+    }
+
+    protected boolean isOnline() {
+        String TAG = LoginActivity.class.getSimpleName();
+        ConnectivityManager cm = (ConnectivityManager) SalesTableActivity.this.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+//        Log.d(TAG, "OnReceiveNetInfo: " + netInfo.getExtraInfo());
+        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
 

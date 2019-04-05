@@ -8,8 +8,8 @@
         <item name="colorPrimaryDark">@color/status_bar_color</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:textColorHint">@color/colorWhite</item>
+        <item name="android:textColor">@color/colorBlack</item>
         <item name="colorControlNormal">@color/colorWhite</item>
-        <item name="android:windowAnimationStyle">@style/CustomActivityAnimation</item>
     </style>
 
     <style name="SettingsTheme" parent="Theme.AppCompat.Light.DarkActionBar">
@@ -26,6 +26,11 @@
         <item name="colorControlHighlight">@color/colorAccent</item>
         <item name="android:colorAccent">@color/colorAccent</item>
         <item name="android:textColorHint">#c0c0c0</item>
+    </style>
+
+    <style name="MySpinnerLook"
+        parent="@android:style/Widget.TextView.SpinnerItem">
+        <item name="android:textColor">@color/colorBlack</item>
     </style>
 
     <style name="SpinnerAppTheme" parent="android:Widget.Spinner">

@@ -85,8 +85,8 @@ public class AddUserFragment extends Fragment {
 
         spinner.setAdapter(adapter);
 
-        store_url = getString(R.string.serve_url) + "stores.php";
-        user_url = getString(R.string.serve_url) + "add_user.php";
+        store_url = getString(R.string.serve_url) + "stores";
+        user_url = getString(R.string.serve_url) + "add/user";
 
         malebtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -122,14 +122,12 @@ public class AddUserFragment extends Fragment {
                                 store_name = store_spinner.getSelectedItem().toString();
 
                                 Log.d(TAG,"OnClick: " + store_name);
-                                Toast.makeText(getContext(), "OnClick: " + store_name, Toast.LENGTH_SHORT).show();
 
                                 for(Store store: stores){
                                     if(store_name.equals(store.getStore_name()))
                                         store_id = store.getStore_id();
                                 }
 
-                                Toast.makeText(getContext(), "OnClick: " + store_id, Toast.LENGTH_SHORT).show();
                                 Log.d(TAG,"OnClick: " + store_id);
 
                                 if(spinner.getSelectedItem().toString().equals("Admin")){
@@ -137,9 +135,9 @@ public class AddUserFragment extends Fragment {
                                 }
 
                                 if(malebtn.isChecked())
-                                    new AddUserTask(getContext()).execute(f_name.getText().toString(),l_name.getText().toString(),username.getText().toString(),malebtn.getText().toString(),store_id,spinner.getSelectedItem().toString());
+                                    new AddUserTask(getContext()).execute(f_name.getText().toString(),l_name.getText().toString(),username.getText().toString(),gender,store_id,spinner.getSelectedItem().toString());
                                 else
-                                    new AddUserTask(getContext()).execute(f_name.getText().toString(),l_name.getText().toString(),username.getText().toString(),femalebtn.getText().toString(),store_id,spinner.getSelectedItem().toString());
+                                    new AddUserTask(getContext()).execute(f_name.getText().toString(),l_name.getText().toString(),username.getText().toString(),gender,store_id,spinner.getSelectedItem().toString());
 
                             }else{
                                 Toast.makeText(getContext(), "Check your Internet Connection", Toast.LENGTH_SHORT).show();
@@ -189,6 +187,8 @@ public class AddUserFragment extends Fragment {
             String gender = strings[3];
             String store_id = strings[4];
             String role = strings[5];
+            String password = username + "123";
+            String status = "active";
 
             try {
                 URL url = new URL(user_url);
@@ -203,6 +203,8 @@ public class AddUserFragment extends Fragment {
                         URLEncoder.encode("username", "UTF-8") + "=" + URLEncoder.encode(username, "UTF-8") + "&" +
                         URLEncoder.encode("gender", "UTF-8") + "=" + URLEncoder.encode(gender, "UTF-8")+ "&" +
                         URLEncoder.encode("store_id", "UTF-8") + "=" + URLEncoder.encode(store_id, "UTF-8")+ "&" +
+                        URLEncoder.encode("password", "UTF-8") + "=" + URLEncoder.encode(password, "UTF-8")+ "&" +
+                        URLEncoder.encode("status", "UTF-8") + "=" + URLEncoder.encode(status, "UTF-8")+ "&" +
                         URLEncoder.encode("role", "UTF-8") + "=" + URLEncoder.encode(role, "UTF-8");
                 bufferedWriter.write(data);
                 bufferedWriter.flush();
@@ -235,7 +237,7 @@ public class AddUserFragment extends Fragment {
 
             if (result != null)
             {
-                if (result.contains("Successful")) {
+                if (result.contains("Created")) {
                     Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
                     f_name.setText("");
                     l_name.setText("");
@@ -251,7 +253,7 @@ public class AddUserFragment extends Fragment {
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
-                    Toast.makeText(context, "Oops... Wrong username or password", Toast.LENGTH_LONG).show();
+                    Toast.makeText(context, "Oops... Something went wrong!", Toast.LENGTH_LONG).show();
                 }
             } else
 
@@ -259,7 +261,7 @@ public class AddUserFragment extends Fragment {
                 if (this.dialog != null) {
                     this.dialog.dismiss();
                 }
-                Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "Oops... Something went wrong!", Toast.LENGTH_LONG).show();
             }
         }
 
@@ -301,14 +303,14 @@ public class AddUserFragment extends Fragment {
 
                 try {
                     JSONObject jsonObject = new JSONObject(result);
-                    JSONArray jsonArray = jsonObject.getJSONArray("stores");
+                    JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                     if (jsonArray.length() > 0) {
                         for (int i = 0; i < jsonArray.length(); i++) {
-                            stores.add(new Store(jsonArray.getJSONObject(i).getString("id"),
-                                    jsonArray.getJSONObject(i).getString("name"),
+                            stores.add(new Store(jsonArray.getJSONObject(i).getString("store_id"),
+                                    jsonArray.getJSONObject(i).getString("store_name"),
                                     jsonArray.getJSONObject(i).getString("location")));
-                            storesSting.add(jsonArray.getJSONObject(i).getString("name"));
+                            storesSting.add(jsonArray.getJSONObject(i).getString("store_name"));
                         }
                         if (this.dialog != null) {
                             this.dialog.dismiss();

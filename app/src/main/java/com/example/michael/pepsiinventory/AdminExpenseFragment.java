@@ -85,8 +85,8 @@ public class AdminExpenseFragment extends Fragment {
         action_bar = view.findViewById(R.id.action_bar);
         store_spinner = view.findViewById(R.id.store_spinner);
 
-        store_url = getString(R.string.serve_url) + "stores.php";
-        expense_url = getString(R.string.serve_url) + "add_expense.php";
+        store_url = getString(R.string.serve_url) + "stores";
+        expense_url = getString(R.string.serve_url) + "expense/add";
 
         final DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener() {
             @Override
@@ -106,6 +106,11 @@ public class AdminExpenseFragment extends Fragment {
         });
 
         intChecker = new IntChecker();
+
+        if(isOnline())
+            new StoreLoadingTask(getContext()).execute();
+        else
+            Toast.makeText(getContext(), "Check your Internet Connection", Toast.LENGTH_SHORT).show();
 
         send1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -145,11 +150,6 @@ public class AdminExpenseFragment extends Fragment {
             }
 
         });
-
-        if(isOnline())
-            new StoreLoadingTask(getContext()).execute();
-        else
-            Toast.makeText(getContext(), "Check your Internet Connection", Toast.LENGTH_SHORT).show();
 
         return view;
     }
@@ -227,12 +227,12 @@ public class AdminExpenseFragment extends Fragment {
         @Override
         protected void onPostExecute(String result) {
             Log.d(TAG, "onPostExecute: " + result);
-            Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
 
             if (result != null)
             {
-                if (result.contains("Successful")) {
+                if (result.contains("Added")) {
                     String[] userDetails = result.split("-");
+                    Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
                     name.setText("");
                     amount.setText("");
                     description.setText("");
@@ -295,15 +295,15 @@ public class AdminExpenseFragment extends Fragment {
 
                 try {
                     JSONObject jsonObject = new JSONObject(result);
-                    JSONArray jsonArray = jsonObject.getJSONArray("stores");
+                    JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                     if (jsonArray.length() > 0) {
                         for (int i = 0; i < jsonArray.length(); i++) {
-                            stores.add(new Store(jsonArray.getJSONObject(i).getString("id"),
-                                    jsonArray.getJSONObject(i).getString("name"),
+                            stores.add(new Store(jsonArray.getJSONObject(i).getString("store_id"),
+                                    jsonArray.getJSONObject(i).getString("store_name"),
                                     jsonArray.getJSONObject(i).getString("location")));
-                            storesSting.add(jsonArray.getJSONObject(i).getString("name"));
-                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("id"),jsonArray.getJSONObject(i).getString("name"),jsonArray.getJSONObject(i).getString("location")));
+                            storesSting.add(jsonArray.getJSONObject(i).getString("store_name"));
+                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("store_id"),jsonArray.getJSONObject(i).getString("store_name"),jsonArray.getJSONObject(i).getString("location")));
                         }
                         if (this.dialog != null) {
                             this.dialog.dismiss();

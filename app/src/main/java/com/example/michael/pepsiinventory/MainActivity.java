@@ -24,6 +24,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.transition.Slide;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
@@ -62,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
     private ViewPager viewPager;
     AvatarImageView img_profile;
     TextView textView;
-    String f_name,l_name,firstName,lastName;
+    String f_name,l_name;
     String TAG = MainActivity.class.getSimpleName();
     EditText new_passwd, confirm_passwd;
     Button submitBtn, cancelBtn;
@@ -86,13 +87,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // inside your activity (if you did not enable transitions in your theme)
+        getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
         setContentView(R.layout.activity_main);
+        getWindow().setAllowEnterTransitionOverlap(true);
+        setupWindowAnimations();
+
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        final SharedPreferences myPrefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+
         store_id = getIntent().getStringExtra("store_id");
         user_id = getIntent().getStringExtra("user_id");
-        password_update_url = "http://192.168.43.174/pepsi/password_update.php";
 
         mHandler = new Handler();
 
@@ -109,14 +116,13 @@ public class MainActivity extends AppCompatActivity {
         navHeader = navigationView.getHeaderView(0);
         imgNavHeaderBg = navHeader.findViewById(R.id.img_header_bg);
         img_profile = navHeader.findViewById(R.id.img_profile);
-        textView = navHeader.findViewById(R.id.full_name);
+        textView = navHeader.findViewById(R.id.user_name);
 
         // load nav menu header data
         loadNavHeader();
 
-        final SharedPreferences myPrefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-
         textView.setText(myPrefs.getString("first_name","").concat(" " + myPrefs.getString("last_name","")));
+        textView.setTextColor(Color.WHITE);
 
         // initializing navigation menu
         setUpNavigationView();
@@ -126,6 +132,12 @@ public class MainActivity extends AppCompatActivity {
 //            CURRENT_TAG = TAG_HOME;
 //            loadHomeFragment();
 //        }
+    }
+
+    private void setupWindowAnimations() {
+        Slide slide = new Slide();
+        slide.setDuration(500);
+        getWindow().setEnterTransition(slide);
     }
 
     private void setupViewPager(ViewPager viewPager,String user_id, String store_id){
@@ -389,7 +401,7 @@ public class MainActivity extends AppCompatActivity {
         int width = dm.widthPixels;
         int height = dm.heightPixels;
         dialognew.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialognew.setContentView(R.layout.user_layout);
+        dialognew.setContentView(R.layout.change_password_layout);
         dialognew.getWindow().setLayout((int) (width * .9), (int) (height * .6));
         dialognew.setCancelable(true);
 
@@ -437,7 +449,7 @@ public class MainActivity extends AppCompatActivity {
                                     }else {
                                         if (new_passwd.getText().toString().equals(confirm_passwd.getText().toString())) {
                                             new UpdateUserTask(MainActivity.this).execute(sharedPreferences.getString("user_id",""), new_passwd.getText().toString());
-                                            dialog.cancel();
+                                            dialognew.dismiss();
                                         }
                                         else
                                             Toast.makeText(MainActivity.this, "Incorrect match!", Toast.LENGTH_SHORT).show();
@@ -501,16 +513,18 @@ public class MainActivity extends AppCompatActivity {
             String user_id = strings[0];
             String passwd = strings[1];
 
+            password_update_url = getString(R.string.serve_url) + "user/edit_passwd/" + user_id;
+
             try {
                 URL url = new URL(password_update_url);
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-                httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.setRequestMethod("PUT");
                 httpURLConnection.setDoInput(true);
                 httpURLConnection.setDoOutput(true);
                 OutputStream outputStream = httpURLConnection.getOutputStream();
                 BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
                 String data = URLEncoder.encode("id", "UTF-8") + "=" + URLEncoder.encode(user_id, "UTF-8") + "&" +
-                        URLEncoder.encode("new_passwd", "UTF-8") + "=" + URLEncoder.encode(passwd, "UTF-8");
+                        URLEncoder.encode("password", "UTF-8") + "=" + URLEncoder.encode(passwd, "UTF-8");
                 bufferedWriter.write(data);
                 bufferedWriter.flush();
                 bufferedWriter.close();
@@ -541,8 +555,9 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "onPostExecute: " + result);
 
             if (result != null) {
-                if (result.contains("Successful")) {
+                if (result.contains("Updated")) {
                     String[] userDetails = result.split("-");
+
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }

@@ -1,9 +1,9 @@
-<RelativeLayout
-    android:layout_height="match_parent"
+<RelativeLayout android:layout_height="match_parent"
     android:layout_width="match_parent"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <LinearLayout android:id="@+id/tableRow1"
+    <android.support.constraint.ConstraintLayout android:id="@+id/tableRow1"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:layout_marginTop="12dp"
@@ -17,7 +17,7 @@
             android:id="@+id/store_id"
             android:layout_height="wrap_content"
             android:layout_width="60dp"
-            android:layout_margin="1dp"
+            app:layout_constraintStart_toStartOf="parent"
             android:text="1"
             android:textColor="#000"
             android:textSize="14sp" />
@@ -26,7 +26,8 @@
             android:text="transport"
             android:layout_width="140dp"
             android:layout_height="wrap_content"
-            android:layout_margin="1dp"
+            app:layout_constraintStart_toEndOf="@+id/store_id"
+            app:layout_constraintEnd_toStartOf="@+id/location"
             android:textAlignment="center"
             android:textSize="14sp"
             android:textColor="#000"/>
@@ -34,6 +35,7 @@
             android:id="@+id/location"
             android:text="Dodoma"
             android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
             android:textColor="#000"
             android:textAlignment="center"
             android:layout_height="wrap_content"
@@ -41,6 +43,6 @@
             android:layout_margin="1dp" />
 
 
-    </LinearLayout>
+    </android.support.constraint.ConstraintLayout>
 
 </RelativeLayout>

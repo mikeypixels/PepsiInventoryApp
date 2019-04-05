@@ -36,6 +36,7 @@
         <item>Crate</item>
         <item>Full shell</item>
         <item>Bottle</item>
+        <item>Takeaway</item>
     </string-array>
 
     <string-array name="role">
@@ -50,7 +51,9 @@
     </string-array>
 
     <string name="serve_url">
-        http://192.168.43.174/pepsi/
+        <!--http://192.168.43.79/pepsi_api/public/-->
+        <!--http://192.168.43.174/pepsi_api/public/-->
+        http://pepsi.nyindahotels.com/public/
     </string>
 
     <string name="activity_title_about_us">About Us</string>
@@ -62,6 +65,7 @@
     <string name="action_change_passwd">Change password</string>
     <string name="action_view_users">View Users</string>
     <string name="action_view_stores">View Stores</string>
+    <string name="action_change_price">View Stores</string>
     <string name="action_mark_all_read">Mark All as Read</string>
     <string name="privacy_policy">Privacy Policy</string>
 

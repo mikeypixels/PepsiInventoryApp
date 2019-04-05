@@ -5,7 +5,7 @@
     android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ExpenseTableActivity">
+    tools:context=".AdminExpenseTableActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -68,13 +68,30 @@
 
     </android.support.v7.widget.RecyclerView>
 
-    <TextView
-        android:id="@+id/textView"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="SELECT STORE!"
+        android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:textStyle="italic"
-        android:textSize="30sp"/>
+        android:layout_gravity="center_horizontal"
+        android:src="@drawable/ic_sentiment"/>
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:layout_gravity="center_horizontal"
+            android:textSize="20sp"
+            android:textColor="#6D6D6D"
+            android:textStyle="italic"/>
+
+    </LinearLayout>
 
 </android.support.design.widget.CoordinatorLayout>

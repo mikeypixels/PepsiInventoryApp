@@ -5,18 +5,21 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,11 +31,8 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
-import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.google.gson.Gson;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -45,6 +45,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -52,13 +53,13 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
-
-import static com.example.michael.pepsiinventory.ExpenseTableAdapter.TAG;
+import java.util.prefs.Preferences;
 
 public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.SalesViewHolder> {
 
     Context context;
     private ArrayList<SalesRow> salesRowArrayList;
+    private ArrayList<SalesRow> salesArrayList;
     private final static String TAG = SalesTableAdapter.class.getSimpleName();
     TextView sn, product, quant, amnt, datepick;
     Button editButton, deleteButton, saveButton, cancelButton;
@@ -66,26 +67,25 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
     TextView amt;
     Spinner product_spinner;
     TextView sNo;
-    String sale_update_url = "http://192.168.43.174/pepsi/sale_update.php";
-    String sale_delete_url = "http://192.168.43.174/pepsi/delete_sale.php";
+    String sale_update_url;
+    String sale_delete_url;
     String product_id;
     String cost;
     ArrayList<String> productString = new ArrayList<>();
     final Calendar myCalendar = Calendar.getInstance();
+    SalesInterface salesInterface;
+    int position;
 
-    public interface OnItemClickListener {
-        void onItemClick(int position);
-    }
-
-    public SalesTableAdapter(Context context, ArrayList<SalesRow> salesRows) {
+    public SalesTableAdapter(Context context, ArrayList<SalesRow> salesRows, SalesInterface salesInterface) {
         this.context = context;
+        this.salesInterface = salesInterface;
         salesRowArrayList = salesRows;
     }
 
     public static class SalesViewHolder extends RecyclerView.ViewHolder {
 
         TextView no, product_name, quantity, amount, date;
-        LinearLayout tableRow;
+        ConstraintLayout tableRow;
 
         public SalesViewHolder(View itemView) {
             super(itemView);
@@ -145,6 +145,8 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
                 salesRowArrayList.get(i-1).setProduct_name("Full shell");
             else if(salesRowArrayList.get(i-1).getProduct_name().equals("3")||salesRowArrayList.get(i-1).getProduct_name().equals("Bottle"))
                 salesRowArrayList.get(i-1).setProduct_name("Bottle");
+            else if(salesRowArrayList.get(i-1).getProduct_name().equals("4")||salesRowArrayList.get(i-1).getProduct_name().equals("Takeaway"))
+                salesRowArrayList.get(i-1).setProduct_name("Takeaway");
 
             salesViewHolder.no.setText(salesRowArrayList.get(i-1).getSn());
             salesViewHolder.product_name.setText(salesRowArrayList.get(i-1).getProduct_name());
@@ -226,6 +228,8 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
                                 product_spinner.setSelection(1);
                             else if(salesRow.getProduct_name().equals("Bottle"))
                                 product_spinner.setSelection(2);
+                            else if(salesRow.getProduct_name().equals("Takeaway"))
+                                product_spinner.setSelection(3);
                             qtty = dialognew.findViewById(R.id.quantity);
                             qtty.setText(salesRow.getQuantity());
                             amt = dialognew.findViewById(R.id.amount);
@@ -294,6 +298,7 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
                                         });
 
                                     }
+
                                     else if(product_spinner.getItemAtPosition(position).toString().equals("Full shell")) {
 
                                         if(qtty.getText().toString().isEmpty()){
@@ -389,6 +394,7 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
                             saveButton.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
+                                    position = salesViewHolder.getAdapterPosition()-1;
 
                                     if(product_spinner.getSelectedItem().toString().equals("Crate")) {
                                         product_id = "1";
@@ -398,13 +404,29 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
                                     }
                                     else if(product_spinner.getSelectedItem().toString().equals("Bottle")) {
                                         product_id = "3";
+                                    }else if(product_spinner.getSelectedItem().toString().equals("Takeaway"))
+                                        product_id = "4";
+
+                                    String[] dateArray;
+                                    String databaseDate;
+                                    if(dateV.getText().toString().contains("/")) {
+                                        dateArray = dateV.getText().toString().split("/");
+                                        databaseDate = "20" + dateArray[2].concat("-" + dateArray[1] + "-" + dateArray[0]);
+                                    }else{
+                                        databaseDate = dateV.getText().toString();
                                     }
 
-                                    String[] dateArray = dateV.getText().toString().split("-");
-                                    String databaseDate = dateArray[2].concat("-" + dateArray[1] + "-" + dateArray[0]);
+                                    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
 
                                     if(!qtty.getText().toString().isEmpty()) {
-                                        new UpdateSaleTask(context).execute(product_id, qtty.getText().toString(), amt.getText().toString().replaceAll(",",""), databaseDate, sNo.getText().toString());
+                                        if(isOnline()) {
+                                            salesRowArrayList.get(salesViewHolder.getAdapterPosition()-1).setProduct_name(product_spinner.getSelectedItem().toString());
+                                            salesRowArrayList.get(salesViewHolder.getAdapterPosition()-1).setQuantity(qtty.getText().toString());
+                                            salesRowArrayList.get(salesViewHolder.getAdapterPosition()-1).setDate(databaseDate);
+                                            salesRowArrayList.get(salesViewHolder.getAdapterPosition()-1).setAmount(amt.getText().toString().replaceAll(",",""));
+                                            new UpdateSaleTask(context).execute(product_id, qtty.getText().toString(), amt.getText().toString().replaceAll(",", ""), databaseDate, sNo.getText().toString(), preferences.getString("store_id",""), preferences.getString("user_id",""));
+                                        } else
+                                            Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
                                         dialognew.dismiss();
                                     }
                                     else
@@ -439,7 +461,11 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
                             builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    new SalesDeleteTask(context).execute(sn.getText().toString());
+                                    position = salesViewHolder.getAdapterPosition()-1;
+                                    if(isOnline())
+                                        new SalesDeleteTask(context).execute(sn.getText().toString());
+                                    else
+                                        Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
                                     dialognew.dismiss();
                                 }
                             });
@@ -456,8 +482,6 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
 
                         }
                     });
-
-
                 }
             });
 
@@ -471,11 +495,29 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
         return salesRowArrayList.size()+1;
     }
 
+    protected boolean isOnline() {
+        String TAG = LoginActivity.class.getSimpleName();
+        ConnectivityManager cm = (ConnectivityManager) context.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+//        Log.d(TAG, "OnReceiveNetInfo: " + netInfo.getExtraInfo());
+        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private void updateLabel(){
         String myFormat = "dd/MM/yy";
         SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.getDefault());
 
         dateV.setText(sdf.format(myCalendar.getTime()));
+    }
+
+    private String getDateTime(){
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date date = new Date();
+        return dateFormat.format(date);
     }
 
     public class UpdateSaleTask extends AsyncTask<String, Void, String> {
@@ -505,19 +547,25 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
             String sale_amount = strings[2];
             String sale_date = strings[3];
             String sale_id = strings[4];
+            String store_id = strings[5];
+            String user_id = strings[6];
+
+            sale_update_url = this.context.getResources().getString(R.string.serve_url) + "sale/edit/" + sale_id;
 
             try {
                 URL url = new URL(sale_update_url);
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-                httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.setRequestMethod("PUT");
                 httpURLConnection.setDoInput(true);
                 httpURLConnection.setDoOutput(true);
                 OutputStream outputStream = httpURLConnection.getOutputStream();
                 BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
-                String data = URLEncoder.encode("name", "UTF-8") + "=" + URLEncoder.encode(sale_name, "UTF-8") + "&" +
+                String data = URLEncoder.encode("product_id", "UTF-8") + "=" + URLEncoder.encode(sale_name, "UTF-8") + "&" +
                         URLEncoder.encode("quantity", "UTF-8") + "=" + URLEncoder.encode(sale_quantity, "UTF-8") + "&" +
-                        URLEncoder.encode("amount", "UTF-8") + "=" + URLEncoder.encode(sale_amount, "UTF-8") + "&" +
+                        URLEncoder.encode("cost", "UTF-8") + "=" + URLEncoder.encode(sale_amount, "UTF-8") + "&" +
                         URLEncoder.encode("date", "UTF-8") + "=" + URLEncoder.encode(sale_date, "UTF-8") + "&" +
+                        URLEncoder.encode("user_id", "UTF-8") + "=" + URLEncoder.encode(user_id, "UTF-8") + "&" +
+                        URLEncoder.encode("store_id", "UTF-8") + "=" + URLEncoder.encode(store_id, "UTF-8") + "&" +
                         URLEncoder.encode("id", "UTF-8") + "=" + URLEncoder.encode(sale_id, "UTF-8");
                 bufferedWriter.write(data);
                 bufferedWriter.flush();
@@ -547,11 +595,15 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
         @Override
         protected void onPostExecute(String result) {
             Log.d(TAG, "onPostExecute: " + result);
-            Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
 
             if (result != null) {
-                if (result.contains("Successful")) {
+                if (result.contains("Updated")) {
                     String[] userDetails = result.split("-");
+                    salesArrayList = salesRowArrayList;
+                    salesRowArrayList = new ArrayList<>();
+                    salesRowArrayList.addAll(salesArrayList);
+                    notifyItemRangeChanged(position,getItemCount());
+                    Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
@@ -597,10 +649,12 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
 
             String sale_id = strings[0];
 
+            sale_delete_url = this.context.getResources().getString(R.string.serve_url) + "sale/delete/" + sale_id;
+
             try {
                 URL url = new URL(sale_delete_url);
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-                httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.setRequestMethod("DELETE");
                 httpURLConnection.setDoInput(true);
                 httpURLConnection.setDoOutput(true);
                 OutputStream outputStream = httpURLConnection.getOutputStream();
@@ -636,12 +690,28 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
             Log.d(TAG, "onPostExecute: " + result);
 
             if (result != null) {
-                if(result.contains("Successful")){
+                if(result.contains("Deleted")){
+
+                    salesInterface.getPosition(salesRowArrayList.get(position));
+                    salesRowArrayList.remove(salesRowArrayList.get(position));
+                    notifyItemRemoved(position);
+
+                    double total_amount = 0;
+
+                    for(int i = 0; i < salesRowArrayList.size(); i++){
+                        if(salesRowArrayList.get(i).getDate().equals(getDateTime()))
+                            total_amount = total_amount + Double.parseDouble(salesRowArrayList.get(i).getAmount().replaceAll(",",""));
+                    }
+
+                    final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
+
+                    salesInterface.showSnackBar(total_amount, preferences.getString("store_id",""), preferences.getString("store_name",""));
+
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
 
-                    Toast.makeText(context, "successfully deleted", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
                 }else{
                     if (this.dialog != null) {
                         this.dialog.dismiss();

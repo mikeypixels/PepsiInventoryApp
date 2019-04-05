@@ -3,6 +3,7 @@ package com.example.michael.pepsiinventory;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.graphics.PorterDuff;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -12,8 +13,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,14 +37,15 @@ import java.net.URLEncoder;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class AddStoreFragment extends Fragment {
+public class ChangePriceFragment extends Fragment {
 
-    EditText storeName,location;
+    Spinner spinner;
+    EditText editText;
     Button button;
     TextView textView;
-    String store_url,storename,locationname;
+    String product_id, price_change_url;
 
-    public AddStoreFragment() {
+    public ChangePriceFragment() {
         // Required empty public constructor
     }
 
@@ -49,44 +54,69 @@ public class AddStoreFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_add_store, container, false);
+        View view = inflater.inflate(R.layout.fragment_change_price, container, false);
 
-        storeName = view.findViewById(R.id.store_name);
-        location = view.findViewById(R.id.location);
+        spinner = view.findViewById(R.id.product_spinner);
+        editText = view.findViewById(R.id.price);
+        button = view.findViewById(R.id.submit);
+        textView = view.findViewById(R.id.textView);
 
-        button = view.findViewById(R.id.send2);
-        textView = view.findViewById(R.id.action_store);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(container.getContext(),R.array.products, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        store_url = getString(R.string.serve_url) + "store/add";
+        spinner.getBackground().setColorFilter(getResources().getColor(R.color.colorBlack), PorterDuff.Mode.SRC_ATOP);
+
+        spinner.setAdapter(adapter);
+
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if(spinner.getSelectedItem().toString().equals("Crate")){
+                    product_id = "1";
+                }else if(spinner.getSelectedItem().toString().equals("Full shell")){
+                    product_id = "2";
+                }else if(spinner.getSelectedItem().toString().equals("Bottle")){
+                    product_id = "3";
+                }else if(spinner.getSelectedItem().toString().equals("Takeaway")){
+                    product_id = "4";
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                storename = storeName.getText().toString();
-                locationname = location.getText().toString();
-                if(storename.isEmpty()||locationname.isEmpty())
-                    textView.setText("please fill the field!");
-                else {
-                    textView.setText("");
+            if(spinner.getSelectedItem().toString().equals("select product")){
+                textView.setText("please select product!");
+            }else {
+                if(editText.getText().toString().isEmpty()){
+                    textView.setText("please the price field!");
+                }else{
                     if (isOnline()) {
-                        new AddStoreTask(getContext()).execute(storename, locationname);
-                    } else {
+                        new ChangePriceTask(getContext()).execute(product_id, editText.getText().toString());
+                    } else
                         Toast.makeText(getContext(), "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
-                    }
                 }
+
+            }
             }
         });
 
         return view;
     }
 
-    public class AddStoreTask extends AsyncTask<String, Void, String> {
+    public class ChangePriceTask extends AsyncTask<String, Void, String> {
 
         ProgressDialog dialog;
         Context context;
-        String TAG = AddStoreFragment.class.getSimpleName();
+        String TAG = ChangePriceFragment.class.getSimpleName();
 
-        public AddStoreTask(Context ctx){
+        public ChangePriceTask(Context ctx){
             this.context = ctx;
         }
 
@@ -103,19 +133,21 @@ public class AddStoreFragment extends Fragment {
         @Override
         protected String doInBackground(String... strings) {
 
-            String store_name = strings[0];
-            String location_name = strings[1];
+            String product_id = strings[0];
+            String price = strings[1];
+
+            price_change_url = getString(R.string.serve_url) + "price/edit/" + product_id;
 
             try {
-                URL url = new URL(store_url);
+                URL url = new URL(price_change_url);
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-                httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.setRequestMethod("PUT");
                 httpURLConnection.setDoInput(true);
                 httpURLConnection.setDoOutput(true);
                 OutputStream outputStream = httpURLConnection.getOutputStream();
                 BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
-                String data = URLEncoder.encode("store_name", "UTF-8") + "=" + URLEncoder.encode(store_name, "UTF-8") + "&" +
-                        URLEncoder.encode("location", "UTF-8") + "=" + URLEncoder.encode(location_name, "UTF-8");
+                String data = URLEncoder.encode("product_id", "UTF-8") + "=" + URLEncoder.encode(product_id, "UTF-8") + "&" +
+                        URLEncoder.encode("price", "UTF-8") + "=" + URLEncoder.encode(price, "UTF-8");
                 bufferedWriter.write(data);
                 bufferedWriter.flush();
                 bufferedWriter.close();
@@ -147,16 +179,19 @@ public class AddStoreFragment extends Fragment {
 
             if (result != null)
             {
-                if (result.contains("Added")) {
+                if (result.contains("Updated")) {
+                    String[] userDetails = result.split("-");
                     Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
-                    storeName.setText("");
-                    location.setText("");
-                    dialog.dismiss();
+                    spinner.setSelection(0);
+                    editText.setText("");
+                    if (this.dialog != null) {
+                        this.dialog.dismiss();
+                    }
 //                    SlideAnimationUtil.slideOutToLeft(LoginActivity.this, v.getRootView());
                 } else {
                     if(this.dialog != null)
                         dialog.dismiss();
-                    Toast.makeText(context, "adding was unsuccessful", Toast.LENGTH_LONG).show();
+                    Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
                 }
             } else
             {

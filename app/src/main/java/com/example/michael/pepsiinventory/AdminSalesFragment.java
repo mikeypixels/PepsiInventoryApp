@@ -65,7 +65,7 @@ public class AdminSalesFragment extends Fragment implements AdapterView.OnItemSe
     TextView textView;
     Button send1;
     final Calendar myCalendar = Calendar.getInstance();
-    String sales_url,store_url,product_id,store_id,user_id;
+    String sales_url,store_url,store_id,user_id;
     ArrayList<Store> stores = new ArrayList<>();
     ArrayList<String> storesSting = new ArrayList<>();
     Spinner store_spinner;
@@ -89,8 +89,8 @@ public class AdminSalesFragment extends Fragment implements AdapterView.OnItemSe
         final Spinner spinner = view.findViewById(R.id.spinner);
         store_spinner = view.findViewById(R.id.store_spinner);
 
-        sales_url = getString(R.string.serve_url) + "add_sales.php";
-        store_url = getString(R.string.serve_url) + "stores.php";
+        sales_url = getString(R.string.serve_url) + "sale/add";
+        store_url = getString(R.string.serve_url) + "stores";
 
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(container.getContext(),R.array.products, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -157,6 +157,9 @@ public class AdminSalesFragment extends Fragment implements AdapterView.OnItemSe
                                     } else if (spinner.getSelectedItem().toString().equals("Bottle")) {
                                         cost = Integer.parseInt(quantity_txt.getText().toString()) * 300;
                                         new AddSalesTask(getContext()).execute("3", store_id, quantity_txt.getText().toString(), String.valueOf(cost), databaseDate, myPrefs.getString("user_id",""));
+                                    }else if (spinner.getSelectedItem().toString().equals("Takeaway")){
+                                        cost = Integer.parseInt(quantity_txt.getText().toString()) * 9000;
+                                        new AddSalesTask(getContext()).execute("4", store_id, quantity_txt.getText().toString(), String.valueOf(cost), databaseDate, myPrefs.getString("user_id",""));
                                     }
 
                                     quantity_txt.setText("");
@@ -264,12 +267,12 @@ public class AdminSalesFragment extends Fragment implements AdapterView.OnItemSe
         @Override
         protected void onPostExecute(String result) {
             Log.d(TAG, "onPostExecute: " + result);
-            Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
 
             if (result != null)
             {
-                if (result.contains("Successful")) {
+                if (result.contains("Added")) {
                     String[] userDetails = result.split("-");
+                    Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
                     quantity_txt.setText("");
                     datepicker.setText("");
                     store_spinner.setSelection(0);
@@ -278,10 +281,16 @@ public class AdminSalesFragment extends Fragment implements AdapterView.OnItemSe
                     }
 //                    SlideAnimationUtil.slideOutToLeft(LoginActivity.this, v.getRootView());
                 } else {
+                    if (this.dialog != null) {
+                        this.dialog.dismiss();
+                    }
                     Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
                 }
             } else
             {
+                if (this.dialog != null) {
+                    this.dialog.dismiss();
+                }
                 Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
             }
         }
@@ -325,15 +334,15 @@ public class AdminSalesFragment extends Fragment implements AdapterView.OnItemSe
 
                 try {
                     JSONObject jsonObject = new JSONObject(result);
-                    JSONArray jsonArray = jsonObject.getJSONArray("stores");
+                    JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                     if (jsonArray.length() > 0) {
                         for (int i = 0; i < jsonArray.length(); i++) {
-                            stores.add(new Store(jsonArray.getJSONObject(i).getString("id"),
-                                    jsonArray.getJSONObject(i).getString("name"),
+                            stores.add(new Store(jsonArray.getJSONObject(i).getString("store_id"),
+                                    jsonArray.getJSONObject(i).getString("store_name"),
                                     jsonArray.getJSONObject(i).getString("location")));
-                            storesSting.add(jsonArray.getJSONObject(i).getString("name"));
-                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("id"),jsonArray.getJSONObject(i).getString("name"),jsonArray.getJSONObject(i).getString("location")));
+                            storesSting.add(jsonArray.getJSONObject(i).getString("store_name"));
+                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("store_id"),jsonArray.getJSONObject(i).getString("store_name"),jsonArray.getJSONObject(i).getString("location")));
                         }
                         if (this.dialog != null) {
                             this.dialog.dismiss();

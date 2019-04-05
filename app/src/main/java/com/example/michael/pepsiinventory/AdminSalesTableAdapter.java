@@ -5,10 +5,15 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
@@ -40,18 +45,20 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 
 public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTableAdapter.AdminSalesViewHolder>{
 
     Context context;
-    private SalesTableAdapter.OnItemClickListener mListener;
     private ArrayList<SalesRow> salesRowArrayList;
+    private ArrayList<SalesRow> salesArrayList;
     private ArrayList<SalesRow> salesRowArrayListCopy;
     private final static String TAG = SalesTableAdapter.class.getSimpleName();
     final Calendar myCalendar = Calendar.getInstance();
@@ -59,14 +66,16 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
     Button editButton, deleteButton, saveButton, cancelButton;
     EditText pName, qtty, dateV;
     TextView sNo, amt;
-    String sale_update_url = "http://192.168.43.174/pepsi/sale_update.php";
-    String sale_delete_url = "http://192.168.43.174/pepsi/delete_sale.php";
     String product_id, cost;
     Spinner product_spinner;
     ArrayList<String> productString = new ArrayList<>();
+    String sale_update_url, sale_delete_url;
+    SalesInterface salesInterface;   
+    int position;
 
-    public AdminSalesTableAdapter(Context context, ArrayList<SalesRow> salesRows) {
+    public AdminSalesTableAdapter(Context context, ArrayList<SalesRow> salesRows, SalesInterface salesInterface) {
         this.context = context;
+        this.salesInterface = salesInterface;
         salesRowArrayList = salesRows;
         salesRowArrayListCopy = salesRows;
     }
@@ -74,9 +83,9 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
     public static class AdminSalesViewHolder extends RecyclerView.ViewHolder {
 
         TextView no, product_name, quantity, amount, date;
-        LinearLayout tableRow;
+        ConstraintLayout tableRow;
 
-        public AdminSalesViewHolder(View itemView, final SalesTableAdapter.OnItemClickListener listener) {
+        public AdminSalesViewHolder(View itemView) {
             super(itemView);
             no = itemView.findViewById(R.id.no);
             product_name = itemView.findViewById(R.id.product_name);
@@ -84,18 +93,6 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
             amount = itemView.findViewById(R.id.amount);
             date = itemView.findViewById(R.id.date);
             tableRow = itemView.findViewById(R.id.tableRow1);
-
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (listener != null) {
-                        int position = getAdapterPosition();
-                        if (position != RecyclerView.NO_POSITION) {
-                            listener.onItemClick(position);
-                        }
-                    }
-                }
-            });
         }
     }
 
@@ -104,7 +101,7 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
     public AdminSalesTableAdapter.AdminSalesViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
         Context context = viewGroup.getContext();
         View view = LayoutInflater.from(context).inflate(R.layout.sales_table_layout, null);
-        return new AdminSalesTableAdapter.AdminSalesViewHolder(view, mListener);
+        return new AdminSalesViewHolder(view);
     }
 
     @Override
@@ -142,6 +139,8 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
                 salesRowArrayList.get(i-1).setProduct_name("Full shell");
             else if(salesRowArrayList.get(i-1).getProduct_name().equals("3")||salesRowArrayList.get(i-1).getProduct_name().equals("Bottle"))
                 salesRowArrayList.get(i-1).setProduct_name("Bottle");
+            else if(salesRowArrayList.get(i-1).getProduct_name().equals("4")||salesRowArrayList.get(i-1).getProduct_name().equals("Takeaway"))
+                salesRowArrayList.get(i-1).setProduct_name("Takeaway");
 
             salesViewHolder.no.setText(salesRowArrayList.get(i-1).getSn());
             salesViewHolder.product_name.setText(salesRowArrayList.get(i-1).getProduct_name());
@@ -221,6 +220,8 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
                                 product_spinner.setSelection(1);
                             else if(salesRow.getProduct_name().equals("Bottle"))
                                 product_spinner.setSelection(2);
+                            else if(salesRow.getProduct_name().equals("Takeaway"))
+                                product_spinner.setSelection(3);
                             qtty = dialognew.findViewById(R.id.quantity);
                             qtty.setText(salesRow.getQuantity());
                             amt = dialognew.findViewById(R.id.amount);
@@ -385,6 +386,7 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
                             saveButton.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
+                                    position = salesViewHolder.getAdapterPosition()-1;
 
                                     if(product_spinner.getSelectedItem().toString().equals("Crate")) {
                                         product_id = "1";
@@ -394,13 +396,33 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
                                     }
                                     else if(product_spinner.getSelectedItem().toString().equals("Bottle")) {
                                         product_id = "3";
+                                    }else if(product_spinner.getSelectedItem().toString().equals("Takeaway"))
+                                        product_id = "4";
+
+                                    String[] dateArray;
+                                    String databaseDate;
+                                    if(dateV.getText().toString().contains("/")) {
+                                        dateArray = dateV.getText().toString().split("/");
+                                        databaseDate = "20" + dateArray[2].concat("-" + dateArray[1] + "-" + dateArray[0]);
+                                    }else{
+                                        databaseDate = dateV.getText().toString();
                                     }
 
-                                    String[] dateArray = dateV.getText().toString().split("-");
-                                    String databaseDate = dateArray[2].concat("-" + dateArray[1] + "-" + dateArray[0]);
+                                    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
 
                                     if(!qtty.getText().toString().isEmpty()){
-                                        new UpdateSaleTask(context).execute(product_id,qtty.getText().toString(),amt.getText().toString().replaceAll(",",""),databaseDate,sNo.getText().toString());
+                                        if(isOnline()){
+                                            salesRowArrayList.get(salesViewHolder.getAdapterPosition()-1).setProduct_name(product_spinner.getSelectedItem().toString());
+                                            salesRowArrayList.get(salesViewHolder.getAdapterPosition()-1).setQuantity(qtty.getText().toString());
+                                            salesRowArrayList.get(salesViewHolder.getAdapterPosition()-1).setDate(databaseDate);
+                                            salesRowArrayList.get(salesViewHolder.getAdapterPosition()-1).setAmount(amt.getText().toString().replaceAll(",",""));
+                                            Log.d(TAG, "OnReceivingThis: " + preferences.getString("user_id",""));
+                                            new UpdateSaleTask(context).execute(product_id, qtty.getText().toString(), amt.getText().toString().replaceAll(",", ""), databaseDate, sNo.getText().toString(), preferences.getString("user_id",""));
+
+                                        }else{
+                                            Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
+                                        }
+
                                         dialognew.dismiss();
                                     }else
                                         Toast.makeText(context, "please fill the quantity field!", Toast.LENGTH_SHORT).show();
@@ -434,7 +456,11 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
                             builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    new SalesDeleteTask(context).execute(sn.getText().toString());
+                                    position = salesViewHolder.getAdapterPosition()-1;
+                                    if(isOnline())
+                                        new SalesDeleteTask(context).execute(sn.getText().toString());
+                                    else
+                                        Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
                                     dialognew.dismiss();
                                 }
                             });
@@ -499,19 +525,23 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
             String sale_amount = strings[2];
             String sale_date = strings[3];
             String sale_id = strings[4];
+            String user_id = strings[5];
+
+            sale_update_url = this.context.getResources().getString(R.string.serve_url) + "sale/edit/" + sale_id;
 
             try {
                 URL url = new URL(sale_update_url);
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-                httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.setRequestMethod("PUT");
                 httpURLConnection.setDoInput(true);
                 httpURLConnection.setDoOutput(true);
                 OutputStream outputStream = httpURLConnection.getOutputStream();
                 BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
-                String data = URLEncoder.encode("name", "UTF-8") + "=" + URLEncoder.encode(sale_name, "UTF-8") + "&" +
+                String data = URLEncoder.encode("product_id", "UTF-8") + "=" + URLEncoder.encode(sale_name, "UTF-8") + "&" +
                         URLEncoder.encode("quantity", "UTF-8") + "=" + URLEncoder.encode(sale_quantity, "UTF-8") + "&" +
-                        URLEncoder.encode("amount", "UTF-8") + "=" + URLEncoder.encode(sale_amount, "UTF-8") + "&" +
+                        URLEncoder.encode("cost", "UTF-8") + "=" + URLEncoder.encode(sale_amount, "UTF-8") + "&" +
                         URLEncoder.encode("date", "UTF-8") + "=" + URLEncoder.encode(sale_date, "UTF-8") + "&" +
+                        URLEncoder.encode("user_id", "UTF-8") + "=" + URLEncoder.encode(user_id, "UTF-8") + "&" +
                         URLEncoder.encode("id", "UTF-8") + "=" + URLEncoder.encode(sale_id, "UTF-8");
                 bufferedWriter.write(data);
                 bufferedWriter.flush();
@@ -543,11 +573,17 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
             Log.d(TAG, "onPostExecute: " + result);
 
             if (result != null) {
-                if (result.contains("Successful")) {
+                if (result.contains("Updated")) {
                     String[] userDetails = result.split("-");
+                    salesArrayList = salesRowArrayList;
+                    salesRowArrayList = new ArrayList<>();
+                    salesRowArrayList.addAll(salesArrayList);
+                    notifyItemRangeChanged(position,getItemCount());
+                    Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
+//                    SlideAnimationUtil.slideOutToLeft(LoginActivity.this, v.getRootView());
                 } else {
                     Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
                     if (this.dialog != null) {
@@ -560,6 +596,18 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
                     this.dialog.dismiss();
                 }
             }
+        }
+    }
+
+    protected boolean isOnline() {
+        String TAG = LoginActivity.class.getSimpleName();
+        ConnectivityManager cm = (ConnectivityManager) context.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+//        Log.d(TAG, "OnReceiveNetInfo: " + netInfo.getExtraInfo());
+        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -587,11 +635,12 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
         protected String doInBackground(String... strings) {
 
             String sale_id = strings[0];
+            sale_delete_url = this.context.getResources().getString(R.string.serve_url) + "sale/delete/" + sale_id;
 
             try {
                 URL url = new URL(sale_delete_url);
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-                httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.setRequestMethod("DELETE");
                 httpURLConnection.setDoInput(true);
                 httpURLConnection.setDoOutput(true);
                 OutputStream outputStream = httpURLConnection.getOutputStream();
@@ -627,7 +676,22 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
 //            Log.d(TAG, "onPostExecute: " + result);
 
             if (result != null) {
-                if(result.contains("Successfully")){
+                if(result.contains("Deleted")){
+                    salesInterface.getPosition(salesRowArrayList.get(position));
+                    salesRowArrayList.remove(salesRowArrayList.get(position));
+                    notifyItemRemoved(position);
+
+                    double total_amount = 0;
+
+                    for(int i = 0; i < salesRowArrayList.size(); i++){
+                        if(salesRowArrayList.get(i).getDate().equals(getDateTime()))
+                            total_amount = total_amount + Double.parseDouble(salesRowArrayList.get(i).getAmount().replaceAll(",",""));
+                    }
+
+                    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+
+                    salesInterface.showSnackBar(total_amount, preferences.getString("id_store",""), preferences.getString("store_name",""));
+
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
@@ -644,6 +708,12 @@ public class AdminSalesTableAdapter extends RecyclerView.Adapter<AdminSalesTable
             }
         }
 
+    }
+
+    private String getDateTime(){
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date date = new Date();
+        return dateFormat.format(date);
     }
 
 }

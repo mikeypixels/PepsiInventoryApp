@@ -3,18 +3,23 @@ package com.example.michael.pepsiinventory;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SearchView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -23,7 +28,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class StoreListTableActivity extends AppCompatActivity {
+public class StoreListTableActivity extends AppCompatActivity{
 
     RecyclerView recyclerView;
     RecyclerView.LayoutManager layoutManager;
@@ -34,6 +39,9 @@ public class StoreListTableActivity extends AppCompatActivity {
     String intentFragment,store_url;
     ArrayList<Store> storeRowArrayList = new ArrayList<>();
     ArrayList<Store> storeRows = new ArrayList<>();
+    ImageView imageView;
+    TextView textView;
+    String TAG = StoreListTableActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,12 +52,17 @@ public class StoreListTableActivity extends AppCompatActivity {
 
         toolbar = findViewById(R.id.toolbar);
         collapsingToolbarLayout = findViewById(R.id.collapsingToolbar);
+        imageView = findViewById(R.id.imageView);
+        textView = findViewById(R.id.textView);
+
+        imageView.setVisibility(View.INVISIBLE);
+        textView.setVisibility(View.INVISIBLE);
 
         toolbar.setNavigationIcon(getResources().getDrawable(R.drawable.ic_arrow_back));
 
         toolbar.setTitle("Stores");
 
-        store_url = getString(R.string.serve_url) + "stores.php";
+        store_url = getString(R.string.serve_url) + "stores";
 
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -67,21 +80,11 @@ public class StoreListTableActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(layoutManager);
 //        salesRows.add(salesTableAdapter.)
 
-        new StoreLoadingTask(StoreListTableActivity.this).execute();
+        if(isOnline())
+            new StoreLoadingTask(StoreListTableActivity.this).execute();
+        else
+            Toast.makeText(this, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
     }
-
-//    public ArrayList<Store> getList(){
-//        ArrayList<Store> arrayList = new ArrayList<>();
-//        ArrayList<Store> newArrayList = new ArrayList<>();
-//
-//        newArrayList.add(new Store("ST/1","Tanga Store","Tanga"));
-//        newArrayList.add(new Store("ST/2","Dodoma Store","Dodoma"));
-//        newArrayList.add(new Store("ST/3","Dar Store","Dar"));
-//
-//        arrayList.addAll(newArrayList);
-//
-//        return arrayList;
-//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -162,7 +165,6 @@ public class StoreListTableActivity extends AppCompatActivity {
 
         Context context;
         ProgressDialog dialog;
-        StoreListTableAdapter storeListTableAdapter;
 //        String TAG = LoginActivity.LoginTask.class.getSimpleName();
 
         public StoreLoadingTask(Context ctx) {
@@ -193,12 +195,12 @@ public class StoreListTableActivity extends AppCompatActivity {
 
                 try {
                     JSONObject jsonObject = new JSONObject(result);
-                    JSONArray jsonArray = jsonObject.getJSONArray("stores");
+                    JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                     if (jsonArray.length() > 0) {
                         for (int i = 0; i < jsonArray.length(); i++) {
-                            storeRowArrayList.add(new Store(jsonArray.getJSONObject(i).getString("id"),
-                                    jsonArray.getJSONObject(i).getString("name"),
+                            storeRowArrayList.add(new Store(jsonArray.getJSONObject(i).getString("store_id"),
+                                    jsonArray.getJSONObject(i).getString("store_name"),
                                     jsonArray.getJSONObject(i).getString("location")));
 //                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("id"),jsonArray.getJSONObject(i).getString("name"),jsonArray.getJSONObject(i).getString("location")));
                         }
@@ -214,7 +216,10 @@ public class StoreListTableActivity extends AppCompatActivity {
                         if (this.dialog != null) {
                             this.dialog.dismiss();
                         }
-                        Toast.makeText(context, "Oops... No stores found!", Toast.LENGTH_LONG).show();
+
+                        imageView.setVisibility(View.VISIBLE);
+                        textView.setText("Oops... No Stores Found!");
+                        textView.setVisibility(View.VISIBLE);
                     }
 
 
@@ -234,5 +239,16 @@ public class StoreListTableActivity extends AppCompatActivity {
             }
         }
 
+    }
+
+    protected boolean isOnline() {
+        ConnectivityManager cm = (ConnectivityManager) StoreListTableActivity.this.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+//        Log.d(TAG, "OnReceiveNetInfo: " + netInfo.getExtraInfo());
+        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

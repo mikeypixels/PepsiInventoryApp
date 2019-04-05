@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -20,6 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SearchView;
 import android.widget.Spinner;
@@ -32,7 +35,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class UserListTableActivity extends AppCompatActivity {
+public class UserListTableActivity extends AppCompatActivity implements UserInterface{
 
     RecyclerView recyclerView;
     RecyclerView.LayoutManager layoutManager;
@@ -50,6 +53,8 @@ public class UserListTableActivity extends AppCompatActivity {
     String TAG = UserListTableActivity.class.getSimpleName();
     String store_id;
     SharedPreferences preferences;
+    ImageView imageView;
+    TextView textView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,13 +66,18 @@ public class UserListTableActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbar);
         collapsingToolbarLayout = findViewById(R.id.collapsingToolbar);
         store_spinner = findViewById(R.id.store_spinner);
+        imageView = findViewById(R.id.imageView);
+        textView = findViewById(R.id.textView);
+
+        imageView.setVisibility(View.INVISIBLE);
+        textView.setVisibility(View.INVISIBLE);
 
         toolbar.setNavigationIcon(getResources().getDrawable(R.drawable.ic_arrow_back));
 
         toolbar.setTitle("Users");
 
-        user_url = getString(R.string.serve_url) + "users.php";
-        store_url = getString(R.string.serve_url) + "stores.php";
+        user_url = getString(R.string.serve_url) + "users";
+        store_url = getString(R.string.serve_url) + "stores";
 
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -85,8 +95,11 @@ public class UserListTableActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(layoutManager);
 //        salesRows.add(salesTableAdapter.)
 
-        new UserLoadingTask(UserListTableActivity.this).execute();
-        new StoreLoadingTask(UserListTableActivity.this).execute();
+        if(isOnline()) {
+            new UserLoadingTask(UserListTableActivity.this).execute();
+            new StoreLoadingTask(UserListTableActivity.this).execute();
+        }else
+            Toast.makeText(this, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
 
         store_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
@@ -131,9 +144,24 @@ public class UserListTableActivity extends AppCompatActivity {
 
                 Log.d(TAG, "onPostReceiveSize: " + userArrayList.size());
 
-                userListTableAdapter = new UserListTableAdapter(UserListTableActivity.this, userArrayList);
+                userListTableAdapter = new UserListTableAdapter(UserListTableActivity.this, userArrayList, UserListTableActivity.this);
                 recyclerView.setAdapter(userListTableAdapter);
                 userListTableAdapter.notifyDataSetChanged();
+
+                if(!store_id.equals("0")){
+                    if (userArrayList.isEmpty()) {
+                        imageView.setVisibility(View.VISIBLE);
+                        textView.setText("Oops... No Users Found!");
+                        textView.setVisibility(View.VISIBLE);
+                    }
+                    else {
+                        imageView.setVisibility(View.INVISIBLE);
+                        textView.setVisibility(View.INVISIBLE);
+                    }
+                }else{
+                    imageView.setVisibility(View.INVISIBLE);
+                    textView.setVisibility(View.INVISIBLE);
+                }
 
             }
 
@@ -145,15 +173,18 @@ public class UserListTableActivity extends AppCompatActivity {
 
     }
 
-//    public ArrayList<User> getList(){
-//        ArrayList<User> arrayList = new ArrayList<>();
-//
-//        for(int i=0; i<45 ; i++){
-//            arrayList.add(i,new User("US/1","John","Ndugu","worker","active"));
-//        }
-//
-//        return arrayList;
-//    }
+    @Override
+    public void getPosition(User user) {
+        int position = 0;
+        for(int i = 0; i < userRowArrayList.size(); i++){
+            if(userRowArrayList.get(i).equals(user)) {
+                userRowArrayList.remove(user);
+                position = i;
+            }
+        }
+        userListTableAdapter.notifyItemRemoved(position+1);
+        userListTableAdapter.notifyItemRangeChanged(position+1, userRowArrayList.size());
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -176,7 +207,7 @@ public class UserListTableActivity extends AppCompatActivity {
                     }
                 }
 
-                userListTableAdapter = new UserListTableAdapter(UserListTableActivity.this, userRows);
+                userListTableAdapter = new UserListTableAdapter(UserListTableActivity.this, userRows, UserListTableActivity.this);
                 recyclerView.setAdapter(userListTableAdapter);
                 userListTableAdapter.notifyDataSetChanged();
 
@@ -196,7 +227,7 @@ public class UserListTableActivity extends AppCompatActivity {
                     }
                 }
 
-                userListTableAdapter = new UserListTableAdapter(UserListTableActivity.this, userRows);
+                userListTableAdapter = new UserListTableAdapter(UserListTableActivity.this, userRows, UserListTableActivity.this);
                 recyclerView.setAdapter(userListTableAdapter);
                 userListTableAdapter.notifyDataSetChanged();
 
@@ -266,7 +297,7 @@ public class UserListTableActivity extends AppCompatActivity {
 
                 try {
                     JSONObject jsonObject = new JSONObject(result);
-                    JSONArray jsonArray = jsonObject.getJSONArray("users");
+                    JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                     for (int i = 0; i < storeRowArrayList.size(); i++) {
                         if (store_spinner.getSelectedItem().toString().equals(storeRowArrayList.get(i).getStore_name())) {
@@ -282,7 +313,7 @@ public class UserListTableActivity extends AppCompatActivity {
                             userRowArrayList.add(new User(jsonArray.getJSONObject(i).getString("id"),
                                     jsonArray.getJSONObject(i).getString("f_name"),
                                     jsonArray.getJSONObject(i).getString("l_name"),
-                                    jsonArray.getJSONObject(i).getString("u_role"),
+                                    jsonArray.getJSONObject(i).getString("role"),
                                     jsonArray.getJSONObject(i).getString("status"),
                                     jsonArray.getJSONObject(i).getString("store_id")));
 //                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("id"),jsonArray.getJSONObject(i).getString("name"),jsonArray.getJSONObject(i).getString("location")));
@@ -299,6 +330,10 @@ public class UserListTableActivity extends AppCompatActivity {
                         if (this.dialog != null) {
                             this.dialog.dismiss();
                         }
+
+                        imageView.setVisibility(View.VISIBLE);
+                        textView.setText("Oops... No Users Found!");
+                        textView.setVisibility(View.VISIBLE);
                         Toast.makeText(context, "Oops... No stores found!", Toast.LENGTH_LONG).show();
                     }
 
@@ -358,14 +393,14 @@ public class UserListTableActivity extends AppCompatActivity {
 
                 try {
                     JSONObject jsonObject = new JSONObject(result);
-                    JSONArray jsonArray = jsonObject.getJSONArray("stores");
+                    JSONArray jsonArray = jsonObject.getJSONArray("result");
 
                     if (jsonArray.length() > 0) {
                         for (int i = 0; i < jsonArray.length(); i++) {
-                            storeRowArrayList.add(new Store(jsonArray.getJSONObject(i).getString("id"),
-                                    jsonArray.getJSONObject(i).getString("name"),
+                            storeRowArrayList.add(new Store(jsonArray.getJSONObject(i).getString("store_id"),
+                                    jsonArray.getJSONObject(i).getString("store_name"),
                                     jsonArray.getJSONObject(i).getString("location")));
-                            storeString.add(jsonArray.getJSONObject(i).getString("name"));
+                            storeString.add(jsonArray.getJSONObject(i).getString("store_name"));
 //                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("id"),jsonArray.getJSONObject(i).getString("name"),jsonArray.getJSONObject(i).getString("location")));
                         }
 
@@ -373,19 +408,6 @@ public class UserListTableActivity extends AppCompatActivity {
                         store_spinner.setAdapter(adapter);
 
                         store_spinner.getBackground().setColorFilter(getResources().getColor(R.color.colorWhite), PorterDuff.Mode.SRC_ATOP);
-//                        store_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-//                            @Override
-//                            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-//                                ((TextView) view).setTextColor(Color.WHITE);
-//                            }
-//
-//                            @Override
-//                            public void onNothingSelected(AdapterView<?> parent) {
-//
-//                            }
-//                        });
-
-//                        userListTableAdapter.getSpinner(store_spinner);
 
                         if (this.dialog != null) {
                             this.dialog.dismiss();
@@ -395,6 +417,7 @@ public class UserListTableActivity extends AppCompatActivity {
                         if (this.dialog != null) {
                             this.dialog.dismiss();
                         }
+
                         Toast.makeText(context, "Oops... No stores found!", Toast.LENGTH_LONG).show();
                     }
 
@@ -415,6 +438,17 @@ public class UserListTableActivity extends AppCompatActivity {
             }
         }
 
+    }
+
+    protected boolean isOnline() {
+        ConnectivityManager cm = (ConnectivityManager) UserListTableActivity.this.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+//        Log.d(TAG, "OnReceiveNetInfo: " + netInfo.getExtraInfo());
+        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
 }
