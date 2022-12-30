@@ -10,11 +10,11 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
-import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.v7.app.AppCompatActivity;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -41,7 +41,7 @@ public class UserListTableActivity extends AppCompatActivity implements UserInte
     RecyclerView.LayoutManager layoutManager;
     UserListTableAdapter userListTableAdapter;
     LinearLayout tableRow;
-    android.support.v7.widget.Toolbar toolbar;
+    androidx.appcompat.widget.Toolbar toolbar;
     CollapsingToolbarLayout collapsingToolbarLayout;
     String intentFragment,user_url,store_url;
     ArrayList<String> storeString = new ArrayList<>();
@@ -399,7 +399,8 @@ public class UserListTableActivity extends AppCompatActivity implements UserInte
                         for (int i = 0; i < jsonArray.length(); i++) {
                             storeRowArrayList.add(new Store(jsonArray.getJSONObject(i).getString("store_id"),
                                     jsonArray.getJSONObject(i).getString("store_name"),
-                                    jsonArray.getJSONObject(i).getString("location")));
+                                    jsonArray.getJSONObject(i).getString("location"),
+                                    jsonArray.getJSONObject(i).getString("store_type")));
                             storeString.add(jsonArray.getJSONObject(i).getString("store_name"));
 //                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("id"),jsonArray.getJSONObject(i).getString("name"),jsonArray.getJSONObject(i).getString("location")));
                         }

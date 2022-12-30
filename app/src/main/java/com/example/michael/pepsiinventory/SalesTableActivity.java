@@ -9,13 +9,13 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
-import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import com.google.android.material.snackbar.Snackbar;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -37,7 +37,6 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 
 public class SalesTableActivity extends AppCompatActivity implements SalesInterface {
@@ -46,7 +45,7 @@ public class SalesTableActivity extends AppCompatActivity implements SalesInterf
     RecyclerView.LayoutManager layoutManager;
     SalesTableAdapter salesTableAdapter;
     LinearLayout tableRow;
-    android.support.v7.widget.Toolbar toolbar;
+    androidx.appcompat.widget.Toolbar toolbar;
     CollapsingToolbarLayout collapsingToolbarLayout;
     String intentFragment,sales_url;
     ArrayList<SalesRow> salesRowArrayList = new ArrayList<>();
@@ -71,7 +70,6 @@ public class SalesTableActivity extends AppCompatActivity implements SalesInterf
         setContentView(R.layout.activity_sales_table);
 
         intentFragment = getIntent().getStringExtra("frgToLoad");
-        tableRow = findViewById(R.id.tableRow1);
 
         toolbar = findViewById(R.id.toolbar);
         collapsingToolbarLayout = findViewById(R.id.collapsingToolbar);
@@ -128,7 +126,7 @@ public class SalesTableActivity extends AppCompatActivity implements SalesInterf
 
         // Changing action button text color
         View sbView = snackbar.getView();
-        TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+        TextView textView = (TextView) sbView.findViewById(R.id.snackbar_text);
         textView.setTextColor(Color.YELLOW);
         snackbar.show();
     }
@@ -224,7 +222,7 @@ public class SalesTableActivity extends AppCompatActivity implements SalesInterf
 
                         // Changing action button text color
                         View sbView = snackbar.getView();
-                        TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+                        TextView textView = (TextView) sbView.findViewById(R.id.snackbar_text);
                         textView.setTextColor(Color.YELLOW);
                         snackbar.show();
 
@@ -318,7 +316,7 @@ public class SalesTableActivity extends AppCompatActivity implements SalesInterf
 
                 // Changing action button text color
                 View sbView = snackbar.getView();
-                TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+                TextView textView = (TextView) sbView.findViewById(R.id.snackbar_text);
                 textView.setTextColor(Color.YELLOW);
                 snackbar.show();
 
@@ -361,7 +359,7 @@ public class SalesTableActivity extends AppCompatActivity implements SalesInterf
 
                 // Changing action button text color
                 View sbView = snackbar.getView();
-                TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+                TextView textView = (TextView) sbView.findViewById(R.id.snackbar_text);
                 textView.setTextColor(Color.YELLOW);
                 snackbar.show();
 
@@ -397,9 +395,9 @@ public class SalesTableActivity extends AppCompatActivity implements SalesInterf
     }
 
     private String getDateTime(){
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date date = new Date();
-        return dateFormat.format(date);
+        return sdf.format(date);
     }
 
     protected boolean isOnline() {

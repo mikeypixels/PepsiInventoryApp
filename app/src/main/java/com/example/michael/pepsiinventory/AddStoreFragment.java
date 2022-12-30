@@ -3,11 +3,13 @@ package com.example.michael.pepsiinventory;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,10 +37,10 @@ import java.net.URLEncoder;
  */
 public class AddStoreFragment extends Fragment {
 
-    EditText storeName,location;
+    EditText storeName, location;
     Button button;
     TextView textView;
-    String store_url,storename,locationname;
+    String store_url, storename, locationname;
 
     public AddStoreFragment() {
         // Required empty public constructor
@@ -62,18 +64,49 @@ public class AddStoreFragment extends Fragment {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+
+                builder.setTitle("Alert");
+                builder.setMessage("Choose store category!");
+
                 storename = storeName.getText().toString();
                 locationname = location.getText().toString();
-                if(storename.isEmpty()||locationname.isEmpty())
+
+                if (storename.isEmpty() || locationname.isEmpty())
                     textView.setText("please fill the field!");
                 else {
-                    textView.setText("");
-                    if (isOnline()) {
-                        new AddStoreTask(getContext()).execute(storename, locationname);
-                    } else {
-                        Toast.makeText(getContext(), "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
-                    }
+
+                    builder.setPositiveButton("Soda store", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            textView.setText("");
+                            if (isOnline()) {
+                                new AddStoreTask(getContext()).execute(storename, locationname, "soda");
+                            } else {
+                                Toast.makeText(getContext(), "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
+                            }
+
+                        }
+                    });
+
+                    builder.setNegativeButton("Water store", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            textView.setText("");
+                            if (isOnline()) {
+                                new AddStoreTask(getContext()).execute(storename, locationname, "water");
+                            } else {
+                                Toast.makeText(getContext(), "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                    });
+
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
                 }
+
             }
         });
 
@@ -86,7 +119,7 @@ public class AddStoreFragment extends Fragment {
         Context context;
         String TAG = AddStoreFragment.class.getSimpleName();
 
-        public AddStoreTask(Context ctx){
+        public AddStoreTask(Context ctx) {
             this.context = ctx;
         }
 
@@ -105,6 +138,7 @@ public class AddStoreFragment extends Fragment {
 
             String store_name = strings[0];
             String location_name = strings[1];
+            String store_type = strings[2];
 
             try {
                 URL url = new URL(store_url);
@@ -115,7 +149,8 @@ public class AddStoreFragment extends Fragment {
                 OutputStream outputStream = httpURLConnection.getOutputStream();
                 BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
                 String data = URLEncoder.encode("store_name", "UTF-8") + "=" + URLEncoder.encode(store_name, "UTF-8") + "&" +
-                        URLEncoder.encode("location", "UTF-8") + "=" + URLEncoder.encode(location_name, "UTF-8");
+                        URLEncoder.encode("location", "UTF-8") + "=" + URLEncoder.encode(location_name, "UTF-8") + "&" +
+                        URLEncoder.encode("store_type", "UTF-8") + "=" + URLEncoder.encode(store_type, "UTF-8");
                 bufferedWriter.write(data);
                 bufferedWriter.flush();
                 bufferedWriter.close();
@@ -145,8 +180,7 @@ public class AddStoreFragment extends Fragment {
         protected void onPostExecute(String result) {
             Log.d(TAG, "onPostExecute: " + result);
 
-            if (result != null)
-            {
+            if (result != null) {
                 if (result.contains("Added")) {
                     Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
                     storeName.setText("");
@@ -154,13 +188,12 @@ public class AddStoreFragment extends Fragment {
                     dialog.dismiss();
 //                    SlideAnimationUtil.slideOutToLeft(LoginActivity.this, v.getRootView());
                 } else {
-                    if(this.dialog != null)
+                    if (this.dialog != null)
                         dialog.dismiss();
                     Toast.makeText(context, "adding was unsuccessful", Toast.LENGTH_LONG).show();
                 }
-            } else
-            {
-                if(this.dialog != null)
+            } else {
+                if (this.dialog != null)
                     dialog.dismiss();
                 Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
             }

@@ -9,14 +9,14 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
-import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import com.google.android.material.snackbar.Snackbar;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.util.Log;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -32,17 +32,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -58,7 +47,7 @@ public class ExpenseTableActivity extends AppCompatActivity implements ExpenseIn
     TableLayout tableLayout;
     TableRow tableRow;
     TextView sn, product_name, quantity, amount, date, textView;
-    android.support.v7.widget.Toolbar toolbar;
+    androidx.appcompat.widget.Toolbar toolbar;
     CollapsingToolbarLayout collapsingToolbarLayout;
     String intentFragment, expense_url, user_id, store_id;
     ArrayList<ExpenseRow> expenseRowArrayList = new ArrayList<>();
@@ -161,7 +150,7 @@ public class ExpenseTableActivity extends AppCompatActivity implements ExpenseIn
 
                 // Changing action button text color
                 View sbView = snackbar.getView();
-                TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+                TextView textView = (TextView) sbView.findViewById(R.id.snackbar_text);
                 textView.setTextColor(Color.YELLOW);
                 snackbar.show();
 
@@ -203,7 +192,7 @@ public class ExpenseTableActivity extends AppCompatActivity implements ExpenseIn
 
                 // Changing action button text color
                 View sbView = snackbar.getView();
-                TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+                TextView textView = (TextView) sbView.findViewById(R.id.snackbar_text);
                 textView.setTextColor(Color.YELLOW);
                 snackbar.show();
 
@@ -237,7 +226,7 @@ public class ExpenseTableActivity extends AppCompatActivity implements ExpenseIn
 
         // Changing action button text color
         View sbView = snackbar.getView();
-        TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+        TextView textView = (TextView) sbView.findViewById(R.id.snackbar_text);
         textView.setTextColor(Color.YELLOW);
         snackbar.show();
     }
@@ -368,7 +357,7 @@ public class ExpenseTableActivity extends AppCompatActivity implements ExpenseIn
 
                         // Changing action button text color
                         View sbView = snackbar.getView();
-                        TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+                        TextView textView = (TextView) sbView.findViewById(R.id.snackbar_text);
                         textView.setTextColor(Color.YELLOW);
                         snackbar.show();
 
@@ -417,8 +406,8 @@ public class ExpenseTableActivity extends AppCompatActivity implements ExpenseIn
     }
 
     private String getDateTime(){
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date date = new Date();
-        return dateFormat.format(date);
+        return sdf.format(date);
     }
 }

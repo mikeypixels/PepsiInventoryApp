@@ -24,13 +24,49 @@
     <string name="nav_about_us">About Us</string>
 
     <!-- Toolbar titles when navigation menu item is selected -->
+    <string name="serve_url">
+        http://192.168.9.133/pepsi_api/public/
+<!--        http://192.168.244.119/pepsi_api/public/-->
+        <!--        http://172.20.10.3/pepsi_api/public/-->
+<!--                http://pepsi.nyindahotels.com/pepsi_api/pepsi/public/-->
+<!--                http://pepsitest.nyindahotels.com/pepsi_api/public/-->
+    </string>
+
+    <string name="activity_title_about_us">About Us</string>
+
+    <string name="activity_title_privacy_policy">Privacy Policy</string>
+
+    <string name="action_clear_all">Clear All</string>
+
+    <string name="action_logout">Logout</string>
+
+    <string name="action_search">search</string>
+
+    <string name="action_spinner">spinner</string>
+
+    <string name="action_change_passwd">Change password</string>
+
+    <string name="action_view_users">View Users</string>
+    <string name="action_view_stores">View Stores</string>
+    <string name="action_view_stocks">View Stocks</string>
+    <string name="action_change_price">View Stores</string>
+    <string name="action_mark_all_read">Mark All as Read</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="key_background_color">key_background_color</string>
+    <string name="key_crash_report">key_crash_report</string>
+    <string name="key_send_feedback">key_send_feedback</string>
+    <string name="key_about_us">key_about_us</string>
+    <string name="choose_email_client">choose_email_client</string>
+    <string name="title_activity_report">ReportActivity</string>
+    <string name="tab_text_1">Tab 1</string>
+
+    <string name="tab_text_2">Tab 2</string>
     <string-array name="nav_item_activity_titles">
         <item>Home</item>
         <item>My Sales</item>
         <item>My Expenses</item>
         <item>Settings</item>
     </string-array>
-
     <string-array name="products">
         <item>select product</item>
         <item>Crate</item>
@@ -38,40 +74,32 @@
         <item>Bottle</item>
         <item>Takeaway</item>
     </string-array>
-
+    <string-array name="all_products">
+        <item>select product</item>
+        <item>Crate</item>
+        <item>Full shell</item>
+        <item>Bottle</item>
+        <item>Takeaway</item>
+        <item>Maji makubwa</item>
+        <item>Maji madogo</item>
+        <item>Soda</item>
+    </string-array>
+    <string-array name="water_products">
+        <item>select product</item>
+        <item>Maji makubwa</item>
+        <item>Maji madogo</item>
+        <item>Soda</item>
+    </string-array>
     <string-array name="role">
         <item>select role</item>
         <item>Admin</item>
         <item>Worker</item>
     </string-array>
-
     <string-array name="urole">
         <item>Admin</item>
         <item>Worker</item>
     </string-array>
-
-    <string name="serve_url">
-        <!--http://192.168.43.79/pepsi_api/public/-->
-        <!--http://192.168.43.174/pepsi_api/public/-->
-        http://pepsi.nyindahotels.com/public/
-    </string>
-
-    <string name="activity_title_about_us">About Us</string>
-    <string name="activity_title_privacy_policy">Privacy Policy</string>
-    <string name="action_clear_all">Clear All</string>
-    <string name="action_logout">Logout</string>
-    <string name="action_search">search</string>
-    <string name="action_spinner">spinner</string>
-    <string name="action_change_passwd">Change password</string>
-    <string name="action_view_users">View Users</string>
-    <string name="action_view_stores">View Stores</string>
-    <string name="action_change_price">View Stores</string>
-    <string name="action_mark_all_read">Mark All as Read</string>
-    <string name="privacy_policy">Privacy Policy</string>
-
-    <string name="key_background_color">key_background_color</string>
-    <string name="key_crash_report">key_crash_report</string>
-    <string name="key_send_feedback">key_send_feedback</string>
-    <string name="key_about_us">key_about_us</string>
-    <string name="choose_email_client">choose_email_client</string>
+    <string-array name="no_product">
+        <item>select product</item>
+    </string-array>
 </resources>

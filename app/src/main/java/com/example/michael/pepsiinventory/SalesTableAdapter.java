@@ -12,10 +12,12 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.constraint.ConstraintLayout;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.RecyclerView;
+
+import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.appcompat.app.AlertDialog;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
@@ -29,10 +31,13 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -48,12 +53,12 @@ import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
-import java.util.prefs.Preferences;
 
 public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.SalesViewHolder> {
 
@@ -72,9 +77,13 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
     String product_id;
     String cost;
     ArrayList<String> productString = new ArrayList<>();
+    ArrayList<String> productString2 = new ArrayList<>();
+    ArrayList<Price> priceRowArrayList = new ArrayList<>();
+    ArrayList<Double> price = new ArrayList<>();
     final Calendar myCalendar = Calendar.getInstance();
     SalesInterface salesInterface;
     int position;
+    private String saleDate;
 
     public SalesTableAdapter(Context context, ArrayList<SalesRow> salesRows, SalesInterface salesInterface) {
         this.context = context;
@@ -133,30 +142,41 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
 
             salesViewHolder.tableRow.setBackgroundColor(Color.parseColor("#efefef"));
             salesViewHolder.no.setTextColor(Color.parseColor("#000000"));
-            salesViewHolder.product_name.setPadding(4,0,0,0);
+            salesViewHolder.product_name.setPadding(4, 0, 0, 0);
             salesViewHolder.product_name.setTextColor(Color.parseColor("#000000"));
             salesViewHolder.quantity.setTextColor(Color.parseColor("#000000"));
             salesViewHolder.amount.setTextColor(Color.parseColor("#000000"));
             salesViewHolder.date.setTextColor(Color.parseColor("#000000"));
 
-            if(salesRowArrayList.get(i-1).getProduct_name().equals("1")||salesRowArrayList.get(i-1).getProduct_name().equals("Crate"))
-                salesRowArrayList.get(i-1).setProduct_name("Crate");
-            else if(salesRowArrayList.get(i-1).getProduct_name().equals("2")||salesRowArrayList.get(i-1).getProduct_name().equals("Full shell"))
-                salesRowArrayList.get(i-1).setProduct_name("Full shell");
-            else if(salesRowArrayList.get(i-1).getProduct_name().equals("3")||salesRowArrayList.get(i-1).getProduct_name().equals("Bottle"))
-                salesRowArrayList.get(i-1).setProduct_name("Bottle");
-            else if(salesRowArrayList.get(i-1).getProduct_name().equals("4")||salesRowArrayList.get(i-1).getProduct_name().equals("Takeaway"))
-                salesRowArrayList.get(i-1).setProduct_name("Takeaway");
+            if (salesRowArrayList.get(i - 1).getProduct_name().equals("1") || salesRowArrayList.get(i - 1).getProduct_name().equals("Crate"))
+                salesRowArrayList.get(i - 1).setProduct_name("Crate");
+            else if (salesRowArrayList.get(i - 1).getProduct_name().equals("2") || salesRowArrayList.get(i - 1).getProduct_name().equals("Full shell"))
+                salesRowArrayList.get(i - 1).setProduct_name("Full shell");
+            else if (salesRowArrayList.get(i - 1).getProduct_name().equals("3") || salesRowArrayList.get(i - 1).getProduct_name().equals("Bottle"))
+                salesRowArrayList.get(i - 1).setProduct_name("Bottle");
+            else if (salesRowArrayList.get(i - 1).getProduct_name().equals("4") || salesRowArrayList.get(i - 1).getProduct_name().equals("Takeaway"))
+                salesRowArrayList.get(i - 1).setProduct_name("Takeaway");
+            else if (salesRowArrayList.get(i - 1).getProduct_name().equals("5") || salesRowArrayList.get(i - 1).getProduct_name().equals("Maji makubwa"))
+                salesRowArrayList.get(i - 1).setProduct_name("Maji makubwa");
+            else if (salesRowArrayList.get(i - 1).getProduct_name().equals("6") || salesRowArrayList.get(i - 1).getProduct_name().equals("Maji madogo"))
+                salesRowArrayList.get(i - 1).setProduct_name("Maji madogo");
+            else if (salesRowArrayList.get(i - 1).getProduct_name().equals("7") || salesRowArrayList.get(i - 1).getProduct_name().equals("Soda"))
+                salesRowArrayList.get(i - 1).setProduct_name("Soda");
 
-            salesViewHolder.no.setText(salesRowArrayList.get(i-1).getSn());
-            salesViewHolder.product_name.setText(salesRowArrayList.get(i-1).getProduct_name());
-            salesViewHolder.quantity.setText(salesRowArrayList.get(i-1).getQuantity());
+            salesViewHolder.no.setText(salesRowArrayList.get(i - 1).getSn());
+            salesViewHolder.product_name.setText(salesRowArrayList.get(i - 1).getProduct_name());
+            salesViewHolder.quantity.setText(salesRowArrayList.get(i - 1).getQuantity());
             NumberFormat formatter = new DecimalFormat("#,###");
             String formattedNumber = formatter.format(Double.parseDouble(salesRowArrayList.get(i - 1).getAmount()));
             salesViewHolder.amount.setText(formattedNumber);
-            salesViewHolder.date.setText(salesRowArrayList.get(i-1).getDate());
+            salesViewHolder.date.setText(salesRowArrayList.get(i - 1).getDate());
 
-            final SalesRow salesRow = salesRowArrayList.get(i-1);
+            final SalesRow salesRow = salesRowArrayList.get(i - 1);
+
+            if (isOnline())
+                new PriceLoadingTask(context).execute();
+            else
+                Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
 
             salesViewHolder.tableRow.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -170,9 +190,9 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
                     final DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener() {
                         @Override
                         public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-                            myCalendar.set(Calendar.YEAR,year);
-                            myCalendar.set(Calendar.MONTH,month);
-                            myCalendar.set(Calendar.DAY_OF_MONTH,dayOfMonth);
+                            myCalendar.set(Calendar.YEAR, year);
+                            myCalendar.set(Calendar.MONTH, month);
+                            myCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
                             updateLabel();
                         }
                     };
@@ -180,6 +200,11 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
                     productString.add("Crate");
                     productString.add("Full shell");
                     productString.add("Bottle");
+                    productString.add("Takeaway");
+
+                    productString2.add("Maji makubwa");
+                    productString2.add("Maji madogo");
+                    productString2.add("Soda");
 
                     final Dialog dialognew = new Dialog(context);
                     DisplayMetrics dm = context.getResources().getDisplayMetrics();
@@ -208,277 +233,502 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
 
                     dialognew.show();
 
+                    final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+
                     editButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            dialognew.setContentView(R.layout.edit_layout);
-                            product_spinner = new Spinner(context);
+                            Calendar calendar = Calendar.getInstance();
+                            saleDate = salesRow.getDate();
+                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-                            sNo = dialognew.findViewById(R.id.sn);
-                            sNo.setText(salesRow.getSn());
-                            product_spinner = dialognew.findViewById(R.id.product_name_spinner);
+                            long millis = 0;
+                            try {
+                                Date sDate = null;
+                                sDate = sdf.parse(saleDate);
+                                millis = sDate.getTime();
+                                System.out.println("=====================================" + saleDate + "=======" + millis + "=======" + calendar.getTimeInMillis());
+                                if (millis + 86400000 >= calendar.getTimeInMillis()) {
+                                    dialognew.setContentView(R.layout.edit_layout);
+                                    product_spinner = new Spinner(context);
 
-                            ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, productString);
-                            product_spinner.setAdapter(adapter);
-                            product_spinner.getBackground().setColorFilter(context.getResources().getColor(R.color.colorWhite), PorterDuff.Mode.SRC_ATOP);
+                                    sNo = dialognew.findViewById(R.id.sn);
+                                    sNo.setText(salesRow.getSn());
+                                    product_spinner = dialognew.findViewById(R.id.product_name_spinner);
 
-                            if(salesRow.getProduct_name().equals("Crate"))
-                                product_spinner.setSelection(0);
-                            else if(salesRow.getProduct_name().equals("Full shell"))
-                                product_spinner.setSelection(1);
-                            else if(salesRow.getProduct_name().equals("Bottle"))
-                                product_spinner.setSelection(2);
-                            else if(salesRow.getProduct_name().equals("Takeaway"))
-                                product_spinner.setSelection(3);
-                            qtty = dialognew.findViewById(R.id.quantity);
-                            qtty.setText(salesRow.getQuantity());
-                            amt = dialognew.findViewById(R.id.amount);
-                            dateV = dialognew.findViewById(R.id.date);
-                            dateV.setText(salesRow.getDate());
+                                    if (preferences.getString("store_type", "").equals("soda")) {
 
-                            dateV.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    new DatePickerDialog(v.getContext(),date,myCalendar.get(Calendar.YEAR),myCalendar.get(Calendar.MONTH),myCalendar.get(Calendar.DAY_OF_MONTH)).show();
-                                }
-                            });
+                                        ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, productString);
+                                        product_spinner.setAdapter(adapter);
 
-                            saveButton = dialognew.findViewById(R.id.save);
-                            cancelButton = dialognew.findViewById(R.id.cancel);
+                                        if (salesRow.getProduct_name().equals("Crate"))
+                                            product_spinner.setSelection(0);
+                                        else if (salesRow.getProduct_name().equals("Full shell"))
+                                            product_spinner.setSelection(1);
+                                        else if (salesRow.getProduct_name().equals("Bottle"))
+                                            product_spinner.setSelection(2);
+                                        else if (salesRow.getProduct_name().equals("Takeaway"))
+                                            product_spinner.setSelection(3);
 
-                            Log.d(TAG, "OnReceiveDetails: " + sNo + " " + qtty+ " " + amt);
+                                    } else if (preferences.getString("store_type", "").equals("water")) {
 
-                            product_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                                        ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, productString2);
+                                        product_spinner.setAdapter(adapter);
 
-                                @Override
-                                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                                        if (salesRow.getProduct_name().equals("Maji makubwa"))
+                                            product_spinner.setSelection(0);
+                                        else if (salesRow.getProduct_name().equals("Maji madogo"))
+                                            product_spinner.setSelection(1);
+                                        else if (salesRow.getProduct_name().equals("Soda"))
+                                            product_spinner.setSelection(2);
+                                    }
 
-                                    ((TextView) view).setTextColor(Color.WHITE);
+                                    product_spinner.getBackground().setColorFilter(context.getResources().getColor(R.color.colorWhite), PorterDuff.Mode.SRC_ATOP);
 
-                                    if(product_spinner.getItemAtPosition(position).toString().equals("Crate")) {
+                                    qtty = dialognew.findViewById(R.id.quantity);
+                                    qtty.setText(salesRow.getQuantity());
+                                    amt = dialognew.findViewById(R.id.amount);
+                                    dateV = dialognew.findViewById(R.id.date);
+                                    dateV.setText(salesRow.getDate());
 
-                                        if(qtty.getText().toString().isEmpty()){
-                                            amt.setText("");
-                                        }else {
-                                            cost = String.valueOf(9800 * Integer.parseInt(qtty.getText().toString()));
-                                            NumberFormat formatter = new DecimalFormat("#,###");
-                                            String formattedNumber = formatter.format(Double.parseDouble(cost));
-                                            amt.setText(formattedNumber);
+                                    dateV.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            new DatePickerDialog(v.getContext(), date, myCalendar.get(Calendar.YEAR), myCalendar.get(Calendar.MONTH), myCalendar.get(Calendar.DAY_OF_MONTH)).show();
+                                        }
+                                    });
+
+                                    saveButton = dialognew.findViewById(R.id.save);
+                                    cancelButton = dialognew.findViewById(R.id.cancel);
+
+                                    Log.d(TAG, "OnReceiveDetails: " + sNo + " " + qtty + " " + amt);
+
+                                    product_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+                                        @Override
+                                        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+                                            ((TextView) view).setTextColor(Color.WHITE);
+
+                                            for (int i = 0; i < priceRowArrayList.size(); i++) {
+                                                price.add(Double.parseDouble(priceRowArrayList.get(i).getPrice()));
+                                            }
+
+                                            if (product_spinner.getItemAtPosition(position).toString().equals("Crate")) {
+
+                                                if (qtty.getText().toString().isEmpty()) {
+                                                    amt.setText("");
+                                                } else {
+                                                    cost = String.valueOf(price.get(0) * Integer.parseInt(qtty.getText().toString()));
+                                                    NumberFormat formatter = new DecimalFormat("#,###");
+                                                    String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                    amt.setText(formattedNumber);
+                                                }
+
+                                                qtty.addTextChangedListener(new TextWatcher() {
+                                                    @Override
+                                                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                                                    }
+
+                                                    @Override
+                                                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                                                        if (s.toString().isEmpty()) {
+                                                            amt.setText("");
+                                                        } else {
+                                                            cost = String.valueOf(price.get(0) * Integer.parseInt(String.valueOf(s)));
+                                                            NumberFormat formatter = new DecimalFormat("#,###");
+                                                            String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                            amt.setText(formattedNumber);
+                                                        }
+                                                    }
+
+                                                    @Override
+                                                    public void afterTextChanged(Editable s) {
+                                                        if (s.toString().isEmpty()) {
+                                                            amt.setText("");
+                                                        } else {
+                                                            cost = String.valueOf(price.get(0) * Integer.parseInt(s.toString()));
+                                                            NumberFormat formatter = new DecimalFormat("#,###");
+                                                            String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                            amt.setText(formattedNumber);
+                                                        }
+                                                    }
+                                                });
+
+                                            } else if (product_spinner.getItemAtPosition(position).toString().equals("Full shell")) {
+
+                                                if (qtty.getText().toString().isEmpty()) {
+                                                    amt.setText("");
+                                                } else {
+                                                    cost = String.valueOf(price.get(1) * Integer.parseInt(qtty.getText().toString()));
+                                                    NumberFormat formatter = new DecimalFormat("#,###");
+                                                    String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                    amt.setText(formattedNumber);
+                                                }
+
+                                                qtty.addTextChangedListener(new TextWatcher() {
+                                                    @Override
+                                                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                                                    }
+
+                                                    @Override
+                                                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                                                        if (s.toString().isEmpty()) {
+                                                            amt.setText("");
+                                                        } else {
+                                                            cost = String.valueOf(price.get(1) * Integer.parseInt(s.toString()));
+                                                            NumberFormat formatter = new DecimalFormat("#,###");
+                                                            String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                            amt.setText(formattedNumber);
+                                                        }
+                                                    }
+
+                                                    @Override
+                                                    public void afterTextChanged(Editable s) {
+                                                        if (s.toString().isEmpty()) {
+                                                            amt.setText("");
+                                                        } else {
+                                                            cost = String.valueOf(price.get(1) * Integer.parseInt(s.toString()));
+                                                            NumberFormat formatter = new DecimalFormat("#,###");
+                                                            String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                            amt.setText(formattedNumber);
+                                                        }
+                                                    }
+                                                });
+                                            } else if (product_spinner.getItemAtPosition(position).toString().equals("Bottle")) {
+
+                                                if (qtty.getText().toString().isEmpty()) {
+                                                    amt.setText("");
+                                                } else {
+                                                    cost = String.valueOf(price.get(2) * Integer.parseInt(qtty.getText().toString()));
+                                                    NumberFormat formatter = new DecimalFormat("#,###");
+                                                    String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                    amt.setText(formattedNumber);
+                                                }
+
+                                                qtty.addTextChangedListener(new TextWatcher() {
+                                                    @Override
+                                                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                                                    }
+
+                                                    @Override
+                                                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                                                        if (s.toString().isEmpty()) {
+                                                            amt.setText("");
+                                                        } else {
+                                                            cost = String.valueOf(price.get(2) * Integer.parseInt(s.toString()));
+                                                            NumberFormat formatter = new DecimalFormat("#,###");
+                                                            String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                            amt.setText(formattedNumber);
+                                                        }
+                                                    }
+
+                                                    @Override
+                                                    public void afterTextChanged(Editable s) {
+                                                        if (s.toString().isEmpty()) {
+                                                            amt.setText("");
+                                                        } else {
+                                                            cost = String.valueOf(price.get(2) * Integer.parseInt(s.toString()));
+                                                            NumberFormat formatter = new DecimalFormat("#,###");
+                                                            String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                            amt.setText(formattedNumber);
+                                                        }
+                                                    }
+                                                });
+                                            } else if (product_spinner.getItemAtPosition(position).toString().equals("Takeaway")) {
+
+                                                if (qtty.getText().toString().isEmpty()) {
+                                                    amt.setText("");
+                                                } else {
+                                                    cost = String.valueOf(price.get(3) * Integer.parseInt(qtty.getText().toString()));
+                                                    NumberFormat formatter = new DecimalFormat("#,###");
+                                                    String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                    amt.setText(formattedNumber);
+                                                }
+
+                                                qtty.addTextChangedListener(new TextWatcher() {
+                                                    @Override
+                                                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                                                    }
+
+                                                    @Override
+                                                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                                                        if (s.toString().isEmpty()) {
+                                                            amt.setText("");
+                                                        } else {
+                                                            cost = String.valueOf(price.get(3) * Integer.parseInt(s.toString()));
+                                                            NumberFormat formatter = new DecimalFormat("#,###");
+                                                            String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                            amt.setText(formattedNumber);
+                                                        }
+                                                    }
+
+                                                    @Override
+                                                    public void afterTextChanged(Editable s) {
+                                                        if (s.toString().isEmpty()) {
+                                                            amt.setText("");
+                                                        } else {
+                                                            cost = String.valueOf(price.get(3) * Integer.parseInt(s.toString()));
+                                                            NumberFormat formatter = new DecimalFormat("#,###");
+                                                            String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                            amt.setText(formattedNumber);
+                                                        }
+                                                    }
+                                                });
+                                            } else if (product_spinner.getItemAtPosition(position).toString().equals("Maji makubwa")) {
+
+                                                if (qtty.getText().toString().isEmpty()) {
+                                                    amt.setText("");
+                                                } else {
+                                                    cost = String.valueOf(price.get(4) * Integer.parseInt(qtty.getText().toString()));
+                                                    NumberFormat formatter = new DecimalFormat("#,###");
+                                                    String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                    amt.setText(formattedNumber);
+                                                }
+
+                                                qtty.addTextChangedListener(new TextWatcher() {
+                                                    @Override
+                                                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                                                    }
+
+                                                    @Override
+                                                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                                                        if (s.toString().isEmpty()) {
+                                                            amt.setText("");
+                                                        } else {
+                                                            cost = String.valueOf(price.get(4) * Integer.parseInt(s.toString()));
+                                                            NumberFormat formatter = new DecimalFormat("#,###");
+                                                            String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                            amt.setText(formattedNumber);
+                                                        }
+                                                    }
+
+                                                    @Override
+                                                    public void afterTextChanged(Editable s) {
+                                                        if (s.toString().isEmpty()) {
+                                                            amt.setText("");
+                                                        } else {
+                                                            cost = String.valueOf(price.get(4) * Integer.parseInt(s.toString()));
+                                                            NumberFormat formatter = new DecimalFormat("#,###");
+                                                            String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                            amt.setText(formattedNumber);
+                                                        }
+                                                    }
+                                                });
+                                            } else if (product_spinner.getItemAtPosition(position).toString().equals("Maji madogo")) {
+
+                                                if (qtty.getText().toString().isEmpty()) {
+                                                    amt.setText("");
+                                                } else {
+                                                    cost = String.valueOf(price.get(5) * Integer.parseInt(qtty.getText().toString()));
+                                                    NumberFormat formatter = new DecimalFormat("#,###");
+                                                    String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                    amt.setText(formattedNumber);
+                                                }
+
+                                                qtty.addTextChangedListener(new TextWatcher() {
+                                                    @Override
+                                                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                                                    }
+
+                                                    @Override
+                                                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                                                        if (s.toString().isEmpty()) {
+                                                            amt.setText("");
+                                                        } else {
+                                                            cost = String.valueOf(price.get(5) * Integer.parseInt(s.toString()));
+                                                            NumberFormat formatter = new DecimalFormat("#,###");
+                                                            String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                            amt.setText(formattedNumber);
+                                                        }
+                                                    }
+
+                                                    @Override
+                                                    public void afterTextChanged(Editable s) {
+                                                        if (s.toString().isEmpty()) {
+                                                            amt.setText("");
+                                                        } else {
+                                                            cost = String.valueOf(price.get(5) * Integer.parseInt(s.toString()));
+                                                            NumberFormat formatter = new DecimalFormat("#,###");
+                                                            String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                            amt.setText(formattedNumber);
+                                                        }
+                                                    }
+                                                });
+                                            } else if (product_spinner.getItemAtPosition(position).toString().equals("Soda")) {
+
+                                                if (qtty.getText().toString().isEmpty()) {
+                                                    amt.setText("");
+                                                } else {
+                                                    cost = String.valueOf(price.get(6) * Integer.parseInt(qtty.getText().toString()));
+                                                    NumberFormat formatter = new DecimalFormat("#,###");
+                                                    String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                    amt.setText(formattedNumber);
+                                                }
+
+                                                qtty.addTextChangedListener(new TextWatcher() {
+                                                    @Override
+                                                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                                                    }
+
+                                                    @Override
+                                                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                                                        if (s.toString().isEmpty()) {
+                                                            amt.setText("");
+                                                        } else {
+                                                            cost = String.valueOf(price.get(6) * Integer.parseInt(s.toString()));
+                                                            NumberFormat formatter = new DecimalFormat("#,###");
+                                                            String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                            amt.setText(formattedNumber);
+                                                        }
+                                                    }
+
+                                                    @Override
+                                                    public void afterTextChanged(Editable s) {
+                                                        if (s.toString().isEmpty()) {
+                                                            amt.setText("");
+                                                        } else {
+                                                            cost = String.valueOf(price.get(6) * Integer.parseInt(s.toString()));
+                                                            NumberFormat formatter = new DecimalFormat("#,###");
+                                                            String formattedNumber = formatter.format(Double.parseDouble(cost));
+                                                            amt.setText(formattedNumber);
+                                                        }
+                                                    }
+                                                });
+                                            }
                                         }
 
-                                        qtty.addTextChangedListener(new TextWatcher() {
-                                            @Override
-                                            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                                        @Override
+                                        public void onNothingSelected(AdapterView<?> parent) {
 
-                                            }
-
-                                            @Override
-                                            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                                                if(s.toString().isEmpty()){
-                                                    amt.setText("");
-                                                }else {
-                                                    cost = String.valueOf(9800 * Integer.parseInt(String.valueOf(s)));
-                                                    NumberFormat formatter = new DecimalFormat("#,###");
-                                                    String formattedNumber = formatter.format(Double.parseDouble(cost));
-                                                    amt.setText(formattedNumber);
-                                                }
-                                            }
-
-                                            @Override
-                                            public void afterTextChanged(Editable s) {
-                                                if(s.toString().isEmpty()){
-                                                    amt.setText("");
-                                                }else {
-                                                    cost = String.valueOf(9800 * Integer.parseInt(s.toString()));
-                                                    NumberFormat formatter = new DecimalFormat("#,###");
-                                                    String formattedNumber = formatter.format(Double.parseDouble(cost));
-                                                    amt.setText(formattedNumber);
-                                                }
-                                            }
-                                        });
-
-                                    }
-
-                                    else if(product_spinner.getItemAtPosition(position).toString().equals("Full shell")) {
-
-                                        if(qtty.getText().toString().isEmpty()){
-                                            amt.setText("");
-                                        }else {
-                                            cost = String.valueOf(19800 * Integer.parseInt(qtty.getText().toString()));
-                                            NumberFormat formatter = new DecimalFormat("#,###");
-                                            String formattedNumber = formatter.format(Double.parseDouble(cost));
-                                            amt.setText(formattedNumber);
                                         }
+                                    });
 
-                                        qtty.addTextChangedListener(new TextWatcher() {
-                                            @Override
-                                            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                                    saveButton.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            position = salesViewHolder.getAdapterPosition() - 1;
 
+                                            if (product_spinner.getSelectedItem().toString().equals("Crate")) {
+                                                product_id = "1";
+                                            } else if (product_spinner.getSelectedItem().toString().equals("Full shell")) {
+                                                product_id = "2";
+                                            } else if (product_spinner.getSelectedItem().toString().equals("Bottle")) {
+                                                product_id = "3";
+                                            } else if (product_spinner.getSelectedItem().toString().equals("Takeaway"))
+                                                product_id = "4";
+                                            else if (product_spinner.getSelectedItem().toString().equals("Maji makubwa"))
+                                                product_id = "5";
+                                            else if (product_spinner.getSelectedItem().toString().equals("Maji madogo"))
+                                                product_id = "6";
+                                            else if (product_spinner.getSelectedItem().toString().equals("Soda"))
+                                                product_id = "7";
+
+                                            String[] dateArray;
+                                            String databaseDate;
+                                            if (dateV.getText().toString().contains("/")) {
+                                                dateArray = dateV.getText().toString().split("/");
+                                                databaseDate = "20" + dateArray[2].concat("-" + dateArray[1] + "-" + dateArray[0]);
+                                            } else {
+                                                databaseDate = dateV.getText().toString();
                                             }
 
-                                            @Override
-                                            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                                                if(s.toString().isEmpty()){
-                                                    amt.setText("");
-                                                }else {
-                                                    cost = String.valueOf(19800*Integer.parseInt(s.toString()));
-                                                    NumberFormat formatter = new DecimalFormat("#,###");
-                                                    String formattedNumber = formatter.format(Double.parseDouble(cost));
-                                                    amt.setText(formattedNumber);
-                                                }
-                                            }
+                                            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
 
-                                            @Override
-                                            public void afterTextChanged(Editable s) {
-                                                if(s.toString().isEmpty()){
-                                                    amt.setText("");
-                                                }else {
-                                                    cost = String.valueOf(19800 * Integer.parseInt(s.toString()));
-                                                    NumberFormat formatter = new DecimalFormat("#,###");
-                                                    String formattedNumber = formatter.format(Double.parseDouble(cost));
-                                                    amt.setText(formattedNumber);
-                                                }
-                                            }
-                                        });
-                                    }
-                                    else if(product_spinner.getItemAtPosition(position).toString().equals("Bottle")) {
-
-                                        if(qtty.getText().toString().isEmpty()){
-                                            amt.setText("");
-                                        }else {
-                                            cost = String.valueOf(300 * Integer.parseInt(qtty.getText().toString()));
-                                            NumberFormat formatter = new DecimalFormat("#,###");
-                                            String formattedNumber = formatter.format(Double.parseDouble(cost));
-                                            amt.setText(formattedNumber);
-                                        }
-
-                                        qtty.addTextChangedListener(new TextWatcher() {
-                                            @Override
-                                            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-                                            }
-
-                                            @Override
-                                            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                                                if(s.toString().isEmpty()){
-                                                    amt.setText("");
-                                                }else {
-                                                    cost = String.valueOf(300 * Integer.parseInt(s.toString()));
-                                                    NumberFormat formatter = new DecimalFormat("#,###");
-                                                    String formattedNumber = formatter.format(Double.parseDouble(cost));
-                                                    amt.setText(formattedNumber);
-                                                }
-                                            }
-
-                                            @Override
-                                            public void afterTextChanged(Editable s) {
-                                                if(s.toString().isEmpty()){
-                                                    amt.setText("");
-                                                }else {
-                                                    cost = String.valueOf(300 * Integer.parseInt(s.toString()));
-                                                    NumberFormat formatter = new DecimalFormat("#,###");
-                                                    String formattedNumber = formatter.format(Double.parseDouble(cost));
-                                                    amt.setText(formattedNumber);
-                                                }
-                                            }
-                                        });
-                                    }
-                                }
-
-                                @Override
-                                public void onNothingSelected(AdapterView<?> parent) {
-
-                                }
-                            });
-
-                            saveButton.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    position = salesViewHolder.getAdapterPosition()-1;
-
-                                    if(product_spinner.getSelectedItem().toString().equals("Crate")) {
-                                        product_id = "1";
-                                    }
-                                    else if(product_spinner.getSelectedItem().toString().equals("Full shell")) {
-                                        product_id = "2";
-                                    }
-                                    else if(product_spinner.getSelectedItem().toString().equals("Bottle")) {
-                                        product_id = "3";
-                                    }else if(product_spinner.getSelectedItem().toString().equals("Takeaway"))
-                                        product_id = "4";
-
-                                    String[] dateArray;
-                                    String databaseDate;
-                                    if(dateV.getText().toString().contains("/")) {
-                                        dateArray = dateV.getText().toString().split("/");
-                                        databaseDate = "20" + dateArray[2].concat("-" + dateArray[1] + "-" + dateArray[0]);
-                                    }else{
-                                        databaseDate = dateV.getText().toString();
-                                    }
-
-                                    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
-
-                                    if(!qtty.getText().toString().isEmpty()) {
-                                        if(isOnline()) {
-                                            salesRowArrayList.get(salesViewHolder.getAdapterPosition()-1).setProduct_name(product_spinner.getSelectedItem().toString());
-                                            salesRowArrayList.get(salesViewHolder.getAdapterPosition()-1).setQuantity(qtty.getText().toString());
-                                            salesRowArrayList.get(salesViewHolder.getAdapterPosition()-1).setDate(databaseDate);
-                                            salesRowArrayList.get(salesViewHolder.getAdapterPosition()-1).setAmount(amt.getText().toString().replaceAll(",",""));
-                                            new UpdateSaleTask(context).execute(product_id, qtty.getText().toString(), amt.getText().toString().replaceAll(",", ""), databaseDate, sNo.getText().toString(), preferences.getString("store_id",""), preferences.getString("user_id",""));
-                                        } else
-                                            Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
-                                        dialognew.dismiss();
-                                    }
-                                    else
-                                        Toast.makeText(context, "please fill the quantity field!", Toast.LENGTH_SHORT).show();
+                                            if (!qtty.getText().toString().isEmpty()) {
+                                                if (isOnline()) {
+                                                    salesRowArrayList.get(salesViewHolder.getAdapterPosition() - 1).setProduct_name(product_spinner.getSelectedItem().toString());
+                                                    salesRowArrayList.get(salesViewHolder.getAdapterPosition() - 1).setQuantity(qtty.getText().toString());
+                                                    salesRowArrayList.get(salesViewHolder.getAdapterPosition() - 1).setDate(databaseDate);
+                                                    salesRowArrayList.get(salesViewHolder.getAdapterPosition() - 1).setAmount(amt.getText().toString().replaceAll(",", ""));
+                                                    new UpdateSaleTask(context).execute(product_id, qtty.getText().toString(), amt.getText().toString().replaceAll(",", ""), databaseDate, sNo.getText().toString(), preferences.getString("store_id", ""), preferences.getString("user_id", ""));
+                                                    Calendar calendar = Calendar.getInstance();
+                                                    SharedPreferences.Editor editor = preferences.edit();
+                                                    editor.putString("sale_date", String.valueOf(calendar.getTimeInMillis()));
+                                                    editor.apply();
+                                                } else
+                                                    Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
+                                                dialognew.dismiss();
+                                            } else
+                                                Toast.makeText(context, "please fill the quantity field!", Toast.LENGTH_SHORT).show();
 //                                  new SalesTableActivity.SalesLoadingTask(context).execute();
-                                }
-                            });
+                                        }
+                                    });
 
-                            cancelButton.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    dialognew.dismiss();
+                                    cancelButton.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            dialognew.dismiss();
+                                        }
+                                    });
+
+                                } else {
+                                    Toast.makeText(context, "You can't edit this sale anymore!", Toast.LENGTH_SHORT).show();
                                 }
-                            });
+
+                            } catch (ParseException e) {
+                                e.printStackTrace();
+                            }
+
 
                         }
+
                     });
 
                     deleteButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
+                            Calendar calendar = Calendar.getInstance();
+                            saleDate = salesRow.getDate();
+                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                            Date date = null;
+                            long millis = 0;
+                            try {
+                                date = sdf.parse(saleDate);
+                                assert date != null;
+                                millis = date.getTime();
+                                if (millis + 86400000 >= calendar.getTimeInMillis()) {
+                                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
 
-                            Log.d(TAG,"It reaches here for some good reason");
+                                    builder.setTitle("Alert");
+                                    builder.setMessage("Are you sure you want to delete the sale?");
 
-                            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                                    Log.d(TAG, "OnSalesReceived: " + sn.getText().toString());
 
-                            builder.setTitle("Alert");
-                            builder.setMessage("Are you sure you want to delete the sale?");
+                                    builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            position = salesViewHolder.getAdapterPosition() - 1;
+                                            if (isOnline())
+                                                new SalesDeleteTask(context).execute(sn.getText().toString(), salesRowArrayList.get(position).getStore_id(), salesRowArrayList.get(position).getProduct_name());
+                                            else
+                                                Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
+                                            dialognew.dismiss();
+                                        }
+                                    });
 
-                            Log.d(TAG,"OnSalesReceived: " + sn.getText().toString());
+                                    builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
 
-                            builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    position = salesViewHolder.getAdapterPosition()-1;
-                                    if(isOnline())
-                                        new SalesDeleteTask(context).execute(sn.getText().toString());
-                                    else
-                                        Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
-                                    dialognew.dismiss();
+                                        }
+                                    });
+
+                                    AlertDialog dialog = builder.create();
+                                    dialog.show();
+                                } else {
+                                    Toast.makeText(context, "You can't delete this sale anymore!", Toast.LENGTH_SHORT).show();
                                 }
-                            });
-
-                            builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-
-                                }
-                            });
-
-                            AlertDialog dialog = builder.create();
-                            dialog.show();
+                            } catch (ParseException e) {
+                                e.printStackTrace();
+                            }
 
                         }
                     });
@@ -492,7 +742,7 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
 
     @Override
     public int getItemCount() {
-        return salesRowArrayList.size()+1;
+        return salesRowArrayList.size() + 1;
     }
 
     protected boolean isOnline() {
@@ -507,14 +757,14 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
         }
     }
 
-    private void updateLabel(){
+    private void updateLabel() {
         String myFormat = "dd/MM/yy";
         SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.getDefault());
 
         dateV.setText(sdf.format(myCalendar.getTime()));
     }
 
-    private String getDateTime(){
+    private String getDateTime() {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Date date = new Date();
         return dateFormat.format(date);
@@ -602,8 +852,20 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
                     salesArrayList = salesRowArrayList;
                     salesRowArrayList = new ArrayList<>();
                     salesRowArrayList.addAll(salesArrayList);
-                    notifyItemRangeChanged(position,getItemCount());
+                    notifyItemRangeChanged(position, getItemCount());
                     Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
+
+                    double total_amount = 0;
+
+                    for (int i = 0; i < salesRowArrayList.size(); i++) {
+                        if (salesRowArrayList.get(i).getDate().equals(getDateTime()))
+                            total_amount = total_amount + Double.parseDouble(salesRowArrayList.get(i).getAmount().replaceAll(",", ""));
+                    }
+
+                    final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
+
+                    salesInterface.showSnackBar(total_amount, preferences.getString("store_id", ""), preferences.getString("store_name", ""));
+
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
@@ -648,6 +910,8 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
         protected String doInBackground(String... strings) {
 
             String sale_id = strings[0];
+            String store_id = strings[1];
+            String product_id = strings[2];
 
             sale_delete_url = this.context.getResources().getString(R.string.serve_url) + "sale/delete/" + sale_id;
 
@@ -659,7 +923,9 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
                 httpURLConnection.setDoOutput(true);
                 OutputStream outputStream = httpURLConnection.getOutputStream();
                 BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
-                String data = URLEncoder.encode("id", "UTF-8") + "=" + URLEncoder.encode(sale_id, "UTF-8");
+                String data = URLEncoder.encode("id", "UTF-8") + "=" + URLEncoder.encode(sale_id, "UTF-8") + "&" +
+                        URLEncoder.encode("store_id", "UTF-8") + "=" + URLEncoder.encode(store_id, "UTF-8") + "&" +
+                        URLEncoder.encode("product_id", "UTF-8") + "=" + URLEncoder.encode(product_id, "UTF-8") + "&";
                 bufferedWriter.write(data);
                 bufferedWriter.flush();
                 bufferedWriter.close();
@@ -675,9 +941,9 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
                 inputStream.close();
                 httpURLConnection.disconnect();
 
-            }catch (MalformedURLException e){
+            } catch (MalformedURLException e) {
                 e.printStackTrace();
-            }catch(IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
             }
 
@@ -690,7 +956,7 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
             Log.d(TAG, "onPostExecute: " + result);
 
             if (result != null) {
-                if(result.contains("Deleted")){
+                if (result.contains("Deleted")) {
 
                     salesInterface.getPosition(salesRowArrayList.get(position));
                     salesRowArrayList.remove(salesRowArrayList.get(position));
@@ -698,25 +964,99 @@ public class SalesTableAdapter extends RecyclerView.Adapter<SalesTableAdapter.Sa
 
                     double total_amount = 0;
 
-                    for(int i = 0; i < salesRowArrayList.size(); i++){
-                        if(salesRowArrayList.get(i).getDate().equals(getDateTime()))
-                            total_amount = total_amount + Double.parseDouble(salesRowArrayList.get(i).getAmount().replaceAll(",",""));
+                    for (int i = 0; i < salesRowArrayList.size(); i++) {
+                        if (salesRowArrayList.get(i).getDate().equals(getDateTime()))
+                            total_amount = total_amount + Double.parseDouble(salesRowArrayList.get(i).getAmount().replaceAll(",", ""));
                     }
 
                     final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
 
-                    salesInterface.showSnackBar(total_amount, preferences.getString("store_id",""), preferences.getString("store_name",""));
+                    salesInterface.showSnackBar(total_amount, preferences.getString("store_id", ""), preferences.getString("store_name", ""));
 
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
 
                     Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
-                }else{
+                } else {
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
                     Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_SHORT).show();
+                }
+
+            } else {
+                if (this.dialog != null) {
+                    this.dialog.dismiss();
+                }
+                Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
+            }
+        }
+
+    }
+
+    public class PriceLoadingTask extends AsyncTask<Void, Void, String> {
+
+        Context context;
+        ProgressDialog dialog;
+//        String TAG = LoginActivity.LoginTask.class.getSimpleName();
+
+        public PriceLoadingTask(Context ctx) {
+            context = ctx;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            dialog = new ProgressDialog(context);
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            dialog.setMessage("Loading. Please wait...");
+            dialog.setIndeterminate(true);
+            dialog.setCanceledOnTouchOutside(false);
+            dialog.show();
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            String price_url = this.context.getResources().getString(R.string.serve_url) + "/prices";
+            HttpHandler httpHandler = new HttpHandler();
+            return httpHandler.makeServiceCall(price_url);
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+//            Log.d(TAG, "onPostExecute: " + result);
+
+            if (result != null) {
+
+                try {
+                    JSONObject jsonObject = new JSONObject(result);
+                    JSONArray jsonArray = jsonObject.getJSONArray("result");
+
+                    if (jsonArray.length() > 0) {
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            priceRowArrayList.add(new Price(jsonArray.getJSONObject(i).getString("id"),
+                                    jsonArray.getJSONObject(i).getString("product_id"),
+                                    jsonArray.getJSONObject(i).getString("price")));
+//                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("id"),jsonArray.getJSONObject(i).getString("name"),jsonArray.getJSONObject(i).getString("location")));
+                        }
+
+                        if (this.dialog != null) {
+                            this.dialog.dismiss();
+                        }
+
+                    } else {
+                        if (this.dialog != null)
+                            this.dialog.dismiss();
+
+                        Toast.makeText(context, "Prices not found!", Toast.LENGTH_SHORT).show();
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(context, "Oops... Something went wrong!", Toast.LENGTH_LONG).show();
+                    if (this.dialog != null) {
+                        this.dialog.dismiss();
+                    }
                 }
 
             } else {

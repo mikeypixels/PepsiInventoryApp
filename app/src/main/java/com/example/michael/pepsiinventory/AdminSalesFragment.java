@@ -4,7 +4,6 @@ package com.example.michael.pepsiinventory;
 import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.PorterDuff;
 import android.net.ConnectivityManager;
@@ -12,11 +11,9 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -45,8 +42,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -67,11 +62,11 @@ public class AdminSalesFragment extends Fragment implements AdapterView.OnItemSe
     final Calendar myCalendar = Calendar.getInstance();
     String sales_url,store_url,store_id,user_id;
     ArrayList<Store> stores = new ArrayList<>();
+    ArrayList<Price> priceRowArrayList = new ArrayList<>();
     ArrayList<String> storesSting = new ArrayList<>();
+    ArrayList<Double> price = new ArrayList<>();
     Spinner store_spinner;
     ArrayList<Store> storeDetails;
-
-    private static final String TAG_HOME = "Sales";
 
     public AdminSalesFragment() {
         // Required empty public constructor
@@ -92,12 +87,45 @@ public class AdminSalesFragment extends Fragment implements AdapterView.OnItemSe
         sales_url = getString(R.string.serve_url) + "sale/add";
         store_url = getString(R.string.serve_url) + "stores";
 
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(container.getContext(),R.array.products, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        if (isOnline()) {
+            new StoreLoadingTask(getContext()).execute();
+            new PriceLoadingTask(getContext()).execute();
+        } else {
+            Toast.makeText(getContext(), "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
+        }
 
-        spinner.getBackground().setColorFilter(getResources().getColor(R.color.colorBlack), PorterDuff.Mode.SRC_ATOP);
+        store_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if(store_spinner.getSelectedItem().toString().equals("select store")){
+                    ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(container.getContext(),R.array.no_product, android.R.layout.simple_spinner_item);
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    spinner.getBackground().setColorFilter(getResources().getColor(R.color.colorBlack), PorterDuff.Mode.SRC_ATOP);
+                    spinner.setAdapter(adapter);
+                }else{
+                    for(Store store: stores){
+                        if(store.getStore_name().equals(store_spinner.getSelectedItem())&&store.getStore_type().equals("soda")){
+                            ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(container.getContext(),R.array.products, android.R.layout.simple_spinner_item);
+                            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                            spinner.getBackground().setColorFilter(getResources().getColor(R.color.colorBlack), PorterDuff.Mode.SRC_ATOP);
+                            spinner.setAdapter(adapter);
+                            break;
+                        }else if(store.getStore_name().equals(store_spinner.getSelectedItem())&&store.getStore_type().equals("water")){
+                            ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(container.getContext(),R.array.water_products, android.R.layout.simple_spinner_item);
+                            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                            spinner.getBackground().setColorFilter(getResources().getColor(R.color.colorBlack), PorterDuff.Mode.SRC_ATOP);
+                            spinner.setAdapter(adapter);
+                            break;
+                        }
+                    }
+                }
+            }
 
-        spinner.setAdapter(adapter);
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
 
         final DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener() {
             @Override
@@ -143,23 +171,36 @@ public class AdminSalesFragment extends Fragment implements AdapterView.OnItemSe
 
                                 textView.setText("");
 
+                                for(int i = 0; i < priceRowArrayList.size(); i++ ){
+                                    price.add(Double.parseDouble(priceRowArrayList.get(i).getPrice()));
+                                }
+
                                 String myFormat = "yyyy-mm-dd";
                                 SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.getDefault());
                                 if (isOnline()) {
                                     if (spinner.getSelectedItem().toString().equals("Crate")) {
                                         Log.d(TAG, "OnReceive: " + user_id);
-                                        cost = Integer.parseInt(quantity_txt.getText().toString()) * 9800;
+                                        cost = Integer.parseInt(quantity_txt.getText().toString()) * price.get(0);
                                         new AddSalesTask(getContext()).execute("1", store_id, quantity_txt.getText().toString(), String.valueOf(cost), databaseDate, myPrefs.getString("user_id",""));
                                     } else if (spinner.getSelectedItem().toString().equals("Full shell")) {
                                         Log.d(TAG, "OnReceive: " + user_id);
-                                        cost = Integer.parseInt(quantity_txt.getText().toString()) * 19800;
+                                        cost = Integer.parseInt(quantity_txt.getText().toString()) * price.get(1);
                                         new AddSalesTask(getContext()).execute("2", store_id, quantity_txt.getText().toString(), String.valueOf(cost), databaseDate, myPrefs.getString("user_id",""));
                                     } else if (spinner.getSelectedItem().toString().equals("Bottle")) {
-                                        cost = Integer.parseInt(quantity_txt.getText().toString()) * 300;
+                                        cost = Integer.parseInt(quantity_txt.getText().toString()) * price.get(2);
                                         new AddSalesTask(getContext()).execute("3", store_id, quantity_txt.getText().toString(), String.valueOf(cost), databaseDate, myPrefs.getString("user_id",""));
                                     }else if (spinner.getSelectedItem().toString().equals("Takeaway")){
-                                        cost = Integer.parseInt(quantity_txt.getText().toString()) * 9000;
+                                        cost = Integer.parseInt(quantity_txt.getText().toString()) * price.get(3);
                                         new AddSalesTask(getContext()).execute("4", store_id, quantity_txt.getText().toString(), String.valueOf(cost), databaseDate, myPrefs.getString("user_id",""));
+                                    }else if (spinner.getSelectedItem().toString().equals("Maji makubwa")){
+                                        cost = Integer.parseInt(quantity_txt.getText().toString()) * price.get(4);
+                                        new AddSalesTask(getContext()).execute("5", store_id, quantity_txt.getText().toString(), String.valueOf(cost), databaseDate, myPrefs.getString("user_id",""));
+                                    }else if (spinner.getSelectedItem().toString().equals("Maji madogo")){
+                                        cost = Integer.parseInt(quantity_txt.getText().toString()) * price.get(5);
+                                        new AddSalesTask(getContext()).execute("6", store_id, quantity_txt.getText().toString(), String.valueOf(cost), databaseDate, myPrefs.getString("user_id",""));
+                                    }else if (spinner.getSelectedItem().toString().equals("Soda")){
+                                        cost = Integer.parseInt(quantity_txt.getText().toString()) * price.get(6);
+                                        new AddSalesTask(getContext()).execute("7", store_id, quantity_txt.getText().toString(), String.valueOf(cost), databaseDate, myPrefs.getString("user_id",""));
                                     }
 
                                     quantity_txt.setText("");
@@ -183,12 +224,6 @@ public class AdminSalesFragment extends Fragment implements AdapterView.OnItemSe
 
             }
         });
-
-        if (isOnline()) {
-            new StoreLoadingTask(getContext()).execute();
-        } else {
-            Toast.makeText(getContext(), "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
-        }
 
         // Inflate the layout for this fragment
         return view;
@@ -271,27 +306,19 @@ public class AdminSalesFragment extends Fragment implements AdapterView.OnItemSe
             if (result != null)
             {
                 if (result.contains("Added")) {
-                    String[] userDetails = result.split("-");
-                    Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
                     quantity_txt.setText("");
                     datepicker.setText("");
                     store_spinner.setSelection(0);
-                    if (this.dialog != null) {
-                        this.dialog.dismiss();
-                    }
 //                    SlideAnimationUtil.slideOutToLeft(LoginActivity.this, v.getRootView());
-                } else {
-                    if (this.dialog != null) {
-                        this.dialog.dismiss();
-                    }
-                    Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
                 }
+                Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
+
             } else
             {
-                if (this.dialog != null) {
-                    this.dialog.dismiss();
-                }
-                Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "Oops... something went wrong!", Toast.LENGTH_LONG).show();
+            }
+            if (this.dialog != null) {
+                this.dialog.dismiss();
             }
         }
     }
@@ -340,9 +367,10 @@ public class AdminSalesFragment extends Fragment implements AdapterView.OnItemSe
                         for (int i = 0; i < jsonArray.length(); i++) {
                             stores.add(new Store(jsonArray.getJSONObject(i).getString("store_id"),
                                     jsonArray.getJSONObject(i).getString("store_name"),
-                                    jsonArray.getJSONObject(i).getString("location")));
+                                    jsonArray.getJSONObject(i).getString("location"),
+                                    jsonArray.getJSONObject(i).getString("store_type")));
                             storesSting.add(jsonArray.getJSONObject(i).getString("store_name"));
-                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("store_id"),jsonArray.getJSONObject(i).getString("store_name"),jsonArray.getJSONObject(i).getString("location")));
+                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("store_id"),jsonArray.getJSONObject(i).getString("store_name"),jsonArray.getJSONObject(i).getString("location"), jsonArray.getJSONObject(i).getString("store_type")));
                         }
                         if (this.dialog != null) {
                             this.dialog.dismiss();
@@ -411,5 +439,79 @@ public class AdminSalesFragment extends Fragment implements AdapterView.OnItemSe
         } else {
             return false;
         }
+    }
+
+    public class PriceLoadingTask extends AsyncTask<Void, Void, String> {
+
+        Context context;
+        ProgressDialog dialog;
+//        String TAG = LoginActivity.LoginTask.class.getSimpleName();
+
+        public PriceLoadingTask(Context ctx) {
+            context = ctx;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            dialog = new ProgressDialog(context);
+            dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            dialog.setMessage("Loading. Please wait...");
+            dialog.setIndeterminate(true);
+            dialog.setCanceledOnTouchOutside(false);
+            dialog.show();
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            String price_url = this.context.getResources().getString(R.string.serve_url) + "/prices";
+            HttpHandler httpHandler = new HttpHandler();
+            return httpHandler.makeServiceCall(price_url);
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+//            Log.d(TAG, "onPostExecute: " + result);
+
+            if (result != null) {
+
+                try {
+                    JSONObject jsonObject = new JSONObject(result);
+                    JSONArray jsonArray = jsonObject.getJSONArray("result");
+
+                    if (jsonArray.length() > 0) {
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            priceRowArrayList.add(new Price(jsonArray.getJSONObject(i).getString("id"),
+                                    jsonArray.getJSONObject(i).getString("product_id"),
+                                    jsonArray.getJSONObject(i).getString("price")));
+//                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("id"),jsonArray.getJSONObject(i).getString("name"),jsonArray.getJSONObject(i).getString("location")));
+                        }
+
+                        if (this.dialog != null) {
+                            this.dialog.dismiss();
+                        }
+
+                    }else{
+                        if(this.dialog != null)
+                            this.dialog.dismiss();
+
+                        Toast.makeText(context, "Prices not found!", Toast.LENGTH_SHORT).show();
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(context, "Oops... Something went wrong!", Toast.LENGTH_LONG).show();
+                    if (this.dialog != null) {
+                        this.dialog.dismiss();
+                    }
+                }
+
+            } else {
+                if (this.dialog != null) {
+                    this.dialog.dismiss();
+                }
+                Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
+            }
+        }
+
     }
 }

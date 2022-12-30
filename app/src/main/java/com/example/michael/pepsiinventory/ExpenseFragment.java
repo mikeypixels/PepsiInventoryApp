@@ -10,7 +10,7 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,8 +32,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
@@ -212,6 +210,11 @@ public class ExpenseFragment extends Fragment {
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
+                    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+                    Calendar calendar = Calendar.getInstance();
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putString("sale_date",String.valueOf(calendar.getTimeInMillis()));
+                    editor.apply();
 //                    SlideAnimationUtil.slideOutToLeft(LoginActivity.this, v.getRootView());
                 } else {
                     Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();

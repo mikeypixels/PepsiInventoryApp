@@ -6,12 +6,12 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.v7.app.AppCompatActivity;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.util.Log;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -34,7 +34,7 @@ public class StoreListTableActivity extends AppCompatActivity{
     RecyclerView.LayoutManager layoutManager;
     StoreListTableAdapter storeListTableAdapter;
     LinearLayout tableRow;
-    android.support.v7.widget.Toolbar toolbar;
+    androidx.appcompat.widget.Toolbar toolbar;
     CollapsingToolbarLayout collapsingToolbarLayout;
     String intentFragment,store_url;
     ArrayList<Store> storeRowArrayList = new ArrayList<>();
@@ -102,7 +102,7 @@ public class StoreListTableActivity extends AppCompatActivity{
                 for(int i = 0; i < storeRowArrayList.size(); i++){
                     if(storeRowArrayList.get(i).getStore_id().toLowerCase().contains(query.toLowerCase())||storeRowArrayList.get(i).getStore_name().toLowerCase().contains(query.toLowerCase())||
                             storeRowArrayList.get(i).getLocation().toLowerCase().contains(query.toLowerCase())){
-                        storeRows.add(new Store(storeRowArrayList.get(i).getStore_id(),storeRowArrayList.get(i).getStore_name(),storeRowArrayList.get(i).getLocation()));
+                        storeRows.add(new Store(storeRowArrayList.get(i).getStore_id(),storeRowArrayList.get(i).getStore_name(),storeRowArrayList.get(i).getLocation(), storeRowArrayList.get(i).getStore_type()));
                     }
                 }
 
@@ -122,7 +122,7 @@ public class StoreListTableActivity extends AppCompatActivity{
                 for(int i = 0; i < storeRowArrayList.size(); i++){
                     if(storeRowArrayList.get(i).getStore_id().toLowerCase().contains(newText.toLowerCase())||storeRowArrayList.get(i).getStore_name().toLowerCase().contains(newText.toLowerCase())||
                             storeRowArrayList.get(i).getLocation().toLowerCase().contains(newText.toLowerCase())){
-                        storeRows.add(new Store(storeRowArrayList.get(i).getStore_id(),storeRowArrayList.get(i).getStore_name(),storeRowArrayList.get(i).getLocation()));
+                        storeRows.add(new Store(storeRowArrayList.get(i).getStore_id(),storeRowArrayList.get(i).getStore_name(),storeRowArrayList.get(i).getLocation(), storeRowArrayList.get(i).getStore_type()));
                     }
                 }
 
@@ -201,7 +201,8 @@ public class StoreListTableActivity extends AppCompatActivity{
                         for (int i = 0; i < jsonArray.length(); i++) {
                             storeRowArrayList.add(new Store(jsonArray.getJSONObject(i).getString("store_id"),
                                     jsonArray.getJSONObject(i).getString("store_name"),
-                                    jsonArray.getJSONObject(i).getString("location")));
+                                    jsonArray.getJSONObject(i).getString("location"),
+                                    jsonArray.getJSONObject(i).getString("store_type")));
 //                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("id"),jsonArray.getJSONObject(i).getString("name"),jsonArray.getJSONObject(i).getString("location")));
                         }
 

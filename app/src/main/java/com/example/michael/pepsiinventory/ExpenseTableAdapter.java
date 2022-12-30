@@ -5,17 +5,18 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.constraint.ConstraintLayout;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.RecyclerView;
+
+import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.appcompat.app.AlertDialog;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,14 +26,8 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -48,6 +43,7 @@ import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -70,6 +66,8 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
     IntChecker intChecker = new IntChecker();
     ExpenseInterface expenseInterface;
     int position;
+
+    private String expDate;
 
     final static public String TAG = ExpenseTableAdapter.class.getSimpleName();
 
@@ -142,9 +140,9 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
                     final DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener() {
                         @Override
                         public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-                            myCalendar.set(Calendar.YEAR,year);
-                            myCalendar.set(Calendar.MONTH,month);
-                            myCalendar.set(Calendar.DAY_OF_MONTH,dayOfMonth);
+                            myCalendar.set(Calendar.YEAR, year);
+                            myCalendar.set(Calendar.MONTH, month);
+                            myCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
                             updateLabel();
                         }
                     };
@@ -166,7 +164,7 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
                     editButton = dialognew.findViewById(R.id.edit);
                     deleteButton = dialognew.findViewById(R.id.delete);
 
-                    expenseRow.setDescription("");
+//                    expenseRow.setDescription("");
 
                     sn.setText(expenseRow.getNo());
                     product.setText(expenseRow.getExpense_name());
@@ -181,74 +179,96 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
                     editButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            dialognew.setContentView(R.layout.expense_edit_layout);
+                            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+                            Calendar calendar = Calendar.getInstance();
+                            expDate = expenseRow.getDate();
+                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-                            sNo = dialognew.findViewById(R.id.sn);
-                            sNo.setText(expenseRow.getNo());
-                            pName = dialognew.findViewById(R.id.product_name);
-                            pName.setText(expenseRow.getExpense_name());
-                            amt = dialognew.findViewById(R.id.amount);
-                            NumberFormat formatter = new DecimalFormat("#,###");
-                            String formattedNumber = formatter.format(Double.parseDouble(expenseRow.getAmount()));
-                            amt.setText(formattedNumber);
-                            description0 = dialognew.findViewById(R.id.description0);
-                            description0.setText(expenseRow.getDescription());
-                            dateV = dialognew.findViewById(R.id.date);
-                            dateV.setText(expenseRow.getDate());
+                            long millis = 0;
+                            try {
+                                Date sDate = null;
+                                sDate = sdf.parse(expDate);
+                                millis = sDate.getTime();
+                                if (millis + 86400000 >= calendar.getTimeInMillis()) {
+                                    dialognew.setContentView(R.layout.expense_edit_layout);
 
-                            dateV.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    new DatePickerDialog(v.getContext(),date,myCalendar.get(Calendar.YEAR),myCalendar.get(Calendar.MONTH),myCalendar.get(Calendar.DAY_OF_MONTH)).show();
-                                }
-                            });
+                                    sNo = dialognew.findViewById(R.id.sn);
+                                    sNo.setText(expenseRow.getNo());
+                                    pName = dialognew.findViewById(R.id.product_name);
+                                    pName.setText(expenseRow.getExpense_name());
+                                    amt = dialognew.findViewById(R.id.amount);
+                                    NumberFormat formatter = new DecimalFormat("#,###");
+                                    String formattedNumber = formatter.format(Double.parseDouble(expenseRow.getAmount()));
+                                    amt.setText(formattedNumber);
+                                    description0 = dialognew.findViewById(R.id.description0);
+                                    description0.setText(expenseRow.getDescription());
+                                    dateV = dialognew.findViewById(R.id.date);
+                                    dateV.setText(expenseRow.getDate());
 
-                            saveButton = dialognew.findViewById(R.id.save);
-                            cancelButton = dialognew.findViewById(R.id.cancel);
+                                    dateV.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            new DatePickerDialog(v.getContext(), date, myCalendar.get(Calendar.YEAR), myCalendar.get(Calendar.MONTH), myCalendar.get(Calendar.DAY_OF_MONTH)).show();
+                                        }
+                                    });
 
-                            saveButton.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
+                                    saveButton = dialognew.findViewById(R.id.save);
+                                    cancelButton = dialognew.findViewById(R.id.cancel);
 
-                                    String[] dateArray;
-                                    String databaseDate;
-                                    if(dateV.getText().toString().contains("/")) {
-                                        dateArray = dateV.getText().toString().split("/");
-                                        databaseDate = "20" + dateArray[2].concat("-" + dateArray[1] + "-" + dateArray[0]);
-                                    }else{
-                                        databaseDate = dateV.getText().toString();
-                                    }
+                                    saveButton.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
 
-                                    final SharedPreferences myPrefs = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
-                                    Log.d(TAG,"OnExpenseTabel: " + amt.getText().toString());
-                                    Log.d(TAG,"OnExpenseTabel: " + pName.getText().toString());
-                                    if(!pName.getText().toString().isEmpty()&&!amt.getText().toString().isEmpty()) {
-                                        Log.d(TAG,"OnExpenseTabel: " + amt.getText().toString());
-                                        if(intChecker.Checker(amt.getText().toString().replaceAll(",",""))) {
-                                            position = expenseViewHolder.getAdapterPosition()-1;
-                                            if(isOnline()) {
-                                                expenseRowArrayList.get(expenseViewHolder.getAdapterPosition()-1).setDescription(description0.getText().toString());
-                                                expenseRowArrayList.get(expenseViewHolder.getAdapterPosition()-1).setExpense_name(pName.getText().toString());
-                                                expenseRowArrayList.get(expenseViewHolder.getAdapterPosition()-1).setDate(databaseDate);
-                                                expenseRowArrayList.get(expenseViewHolder.getAdapterPosition()-1).setAmount(amt.getText().toString().replaceAll(",",""));
-                                                new UpdateExpenseTask(context).execute(myPrefs.getString("store_id", ""), databaseDate, pName.getText().toString(), description0.getText().toString(), amt.getText().toString().replaceAll(",", ""), myPrefs.getString("user_id", ""), sNo.getText().toString());
+                                            String[] dateArray;
+                                            String databaseDate;
+                                            if (dateV.getText().toString().contains("/")) {
+                                                dateArray = dateV.getText().toString().split("/");
+                                                databaseDate = "20" + dateArray[2].concat("-" + dateArray[1] + "-" + dateArray[0]);
+                                            } else {
+                                                databaseDate = dateV.getText().toString();
+                                            }
+
+                                            final SharedPreferences myPrefs = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
+                                            Log.d(TAG, "OnExpenseTabel: " + amt.getText().toString());
+                                            Log.d(TAG, "OnExpenseTabel: " + pName.getText().toString());
+                                            if (!pName.getText().toString().isEmpty() && !amt.getText().toString().isEmpty()) {
+                                                Log.d(TAG, "OnExpenseTabel: " + amt.getText().toString());
+                                                if (intChecker.Checker(amt.getText().toString().replaceAll(",", ""))) {
+                                                    position = expenseViewHolder.getAdapterPosition() - 1;
+                                                    if (isOnline()) {
+                                                        expenseRowArrayList.get(expenseViewHolder.getAdapterPosition() - 1).setDescription(description0.getText().toString());
+                                                        expenseRowArrayList.get(expenseViewHolder.getAdapterPosition() - 1).setExpense_name(pName.getText().toString());
+                                                        expenseRowArrayList.get(expenseViewHolder.getAdapterPosition() - 1).setDate(databaseDate);
+                                                        expenseRowArrayList.get(expenseViewHolder.getAdapterPosition() - 1).setAmount(amt.getText().toString().replaceAll(",", ""));
+                                                        new UpdateExpenseTask(context).execute(myPrefs.getString("store_id", ""), databaseDate, pName.getText().toString(), description0.getText().toString(), amt.getText().toString().replaceAll(",", ""), myPrefs.getString("user_id", ""), sNo.getText().toString());
+                                                        Calendar calendar = Calendar.getInstance();
+                                                        SharedPreferences.Editor editor = preferences.edit();
+                                                        editor.putString("sale_date", String.valueOf(calendar.getTimeInMillis()));
+                                                        editor.apply();
+                                                    } else
+                                                        Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
+                                                    dialognew.dismiss();
+                                                } else
+                                                    Toast.makeText(context, "amount should be in number format!", Toast.LENGTH_SHORT).show();
                                             } else
-                                                Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
+                                                Toast.makeText(context, "please fill all fields except description which is optional!", Toast.LENGTH_SHORT).show();
+
+                                        }
+                                    });
+
+                                    cancelButton.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
                                             dialognew.dismiss();
-                                        }else
-                                            Toast.makeText(context, "amount should be in number format!", Toast.LENGTH_SHORT).show();
-                                    }else
-                                        Toast.makeText(context, "please fill all fields except description which is optional!", Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
 
+                                } else {
+                                    Toast.makeText(context, "You can't edit this expense anymore", Toast.LENGTH_SHORT).show();
                                 }
-                            });
-
-                            cancelButton.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    dialognew.dismiss();
-                                }
-                            });
+                            }catch(ParseException e){
+                                e.printStackTrace();
+                            }
 
                         }
                     });
@@ -256,34 +276,50 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
                     deleteButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            Log.d(TAG,"It reaches here for some good reason");
+                            Calendar calendar = Calendar.getInstance();
+                            expDate = expenseRow.getDate();
+                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                            Date date = null;
+                            long millis = 0;
+                            try {
+                                date = sdf.parse(expDate);
+                                assert date != null;
+                                millis = date.getTime();
 
-                            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                                if (millis + 86400000 >= calendar.getTimeInMillis()) {
+                                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
 
-                            builder.setTitle("Alert");
-                            builder.setMessage("Are you sure you want to delete the expense?");
+                                    builder.setTitle("Alert");
+                                    builder.setMessage("Are you sure you want to delete the expense?");
 
-                            builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    position = expenseViewHolder.getAdapterPosition()-1;
-                                    if(isOnline())
-                                        new ExpenseDeleteTask(context).execute(sn.getText().toString());
-                                    else
-                                        Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
-                                    dialognew.dismiss();
+                                    builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            position = expenseViewHolder.getAdapterPosition() - 1;
+                                            if (isOnline())
+                                                new ExpenseDeleteTask(context).execute(sn.getText().toString());
+                                            else
+                                                Toast.makeText(context, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
+                                            dialognew.dismiss();
+                                        }
+                                    });
+
+                                    builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+
+                                        }
+                                    });
+
+                                    AlertDialog dialog = builder.create();
+                                    dialog.show();
+                                }else{
+                                    Toast.makeText(context, "You can't delete this expense anymore!", Toast.LENGTH_SHORT).show();
                                 }
-                            });
 
-                            builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-
-                                }
-                            });
-
-                            AlertDialog dialog = builder.create();
-                            dialog.show();
+                            }catch (ParseException e){
+                                e.printStackTrace();
+                            }
 
                         }
                     });
@@ -310,14 +346,14 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
         }
     }
 
-    private void updateLabel(){
+    private void updateLabel() {
         String myFormat = "dd/MM/yy";
         SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.getDefault());
 
         dateV.setText(sdf.format(myCalendar.getTime()));
     }
 
-    private String getDateTime(){
+    private String getDateTime() {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Date date = new Date();
         return dateFormat.format(date);
@@ -409,7 +445,19 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
                     expenseArrayList = expenseRowArrayList;
                     expenseRowArrayList = new ArrayList<>();
                     expenseRowArrayList.addAll(expenseArrayList);
-                    notifyItemRangeChanged(position,getItemCount());
+                    notifyItemRangeChanged(position, getItemCount());
+
+                    double total_amount = 0;
+
+                    for (int i = 0; i < expenseRowArrayList.size(); i++) {
+                        if (expenseRowArrayList.get(i).getDate().equals(getDateTime()))
+                            total_amount = total_amount + Double.parseDouble(expenseRowArrayList.get(i).getAmount().replaceAll(",", ""));
+                    }
+
+                    final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
+
+                    expenseInterface.showSnackBar(total_amount, preferences.getString("store_id", ""), preferences.getString("store_name", ""));
+
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
@@ -481,9 +529,9 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
                 inputStream.close();
                 httpURLConnection.disconnect();
 
-            }catch (MalformedURLException e){
+            } catch (MalformedURLException e) {
                 e.printStackTrace();
-            }catch(IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
             }
 
@@ -496,28 +544,28 @@ public class ExpenseTableAdapter extends RecyclerView.Adapter<ExpenseTableAdapte
 //            Log.d(TAG, "onPostExecute: " + result);
 
             if (result != null) {
-                if(result.contains("Deleted")){
+                if (result.contains("Deleted")) {
                     expenseInterface.getPosition(expenseRowArrayList.get(position));
                     expenseRowArrayList.remove(expenseRowArrayList.get(position));
                     notifyItemRemoved(position);
 
                     double total_amount = 0;
 
-                    for(int i = 0; i < expenseRowArrayList.size(); i++){
-                        if(expenseRowArrayList.get(i).getDate().equals(getDateTime()))
-                            total_amount = total_amount + Double.parseDouble(expenseRowArrayList.get(i).getAmount().replaceAll(",",""));
+                    for (int i = 0; i < expenseRowArrayList.size(); i++) {
+                        if (expenseRowArrayList.get(i).getDate().equals(getDateTime()))
+                            total_amount = total_amount + Double.parseDouble(expenseRowArrayList.get(i).getAmount().replaceAll(",", ""));
                     }
 
                     final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
 
-                    expenseInterface.showSnackBar(total_amount, preferences.getString("store_id",""), preferences.getString("store_name",""));
+                    expenseInterface.showSnackBar(total_amount, preferences.getString("store_id", ""), preferences.getString("store_name", ""));
 
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
 
                     Toast.makeText(context, "successfully deleted", Toast.LENGTH_SHORT).show();
-                }else{
+                } else {
                     Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_SHORT).show();
                 }
 

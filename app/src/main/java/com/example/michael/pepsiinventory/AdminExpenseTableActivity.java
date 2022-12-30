@@ -10,13 +10,15 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
-import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
+
+import com.example.michael.pepsiinventory.firebaseNotification.MyFirebaseMessagingService;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import com.google.android.material.snackbar.Snackbar;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -35,7 +37,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -47,9 +48,8 @@ public class AdminExpenseTableActivity extends AppCompatActivity implements Expe
     RecyclerView recyclerView;
     RecyclerView.LayoutManager layoutManager;
     AdminExpenseTableAdapter adminExpenseTableAdapter;
-    TableRow tableRow;
-    TextView sn, product_name, quantity, amount, date, textView;
-    android.support.v7.widget.Toolbar toolbar;
+    TextView textView;
+    androidx.appcompat.widget.Toolbar toolbar;
     CollapsingToolbarLayout collapsingToolbarLayout;
     String intentFragment, expense_url, store_url;
     ArrayList<ExpenseRow> expenseRowArrayList = new ArrayList<>();
@@ -73,7 +73,7 @@ public class AdminExpenseTableActivity extends AppCompatActivity implements Expe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_admin_expense_table_activity);
+        setContentView(R.layout.activity_admin_expense_table);
         intentFragment = getIntent().getStringExtra("frgToLoad");
 
         expense_url = getString(R.string.serve_url) + "expenses";
@@ -208,7 +208,7 @@ public class AdminExpenseTableActivity extends AppCompatActivity implements Expe
 
                 // Changing action button text color
                 View sbView = snackbar.getView();
-                TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+                TextView textView = (TextView) sbView.findViewById(R.id.snackbar_text);
                 textView.setTextColor(Color.YELLOW);
                 snackbar.show();
 
@@ -255,7 +255,7 @@ public class AdminExpenseTableActivity extends AppCompatActivity implements Expe
 
         // Changing action button text color
         View sbView = snackbar.getView();
-        TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+        TextView textView = (TextView) sbView.findViewById(R.id.snackbar_text);
         textView.setTextColor(Color.YELLOW);
         snackbar.show();
     }
@@ -412,7 +412,8 @@ public class AdminExpenseTableActivity extends AppCompatActivity implements Expe
                         for (int i = 0; i < jsonArray.length(); i++) {
                             storeRowArrayList.add(new Store(jsonArray.getJSONObject(i).getString("store_id"),
                                     jsonArray.getJSONObject(i).getString("store_name"),
-                                    jsonArray.getJSONObject(i).getString("location")));
+                                    jsonArray.getJSONObject(i).getString("location"),
+                                    jsonArray.getJSONObject(i).getString("store_type")));
                             storeString.add(jsonArray.getJSONObject(i).getString("store_name"));
 //                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("id"),jsonArray.getJSONObject(i).getString("name"),jsonArray.getJSONObject(i).getString("location")));
                         }
@@ -420,6 +421,22 @@ public class AdminExpenseTableActivity extends AppCompatActivity implements Expe
                         ArrayAdapter<String> adapter = new ArrayAdapter<>(AdminExpenseTableActivity.this, android.R.layout.simple_spinner_dropdown_item, storeString);
                         spinner.setAdapter(adapter);
 
+                        String storeName = MyFirebaseMessagingService.Companion.getMsg();
+
+                        Log.d(TAG, "======================================================" + storeName);
+
+                        int i = 0;
+                        if(!storeName.equals("")){
+                            String[] store_names = storeName.split(" ");
+                            for(String store: storeString){
+                                if(store.contains(store_names[4])){
+                                    Log.d(TAG, "-------------------------------------------" + store_names[4]);
+                                    spinner.setSelection(i);
+                                    break;
+                                }
+                                i++;
+                            }
+                        }
 
                         if (this.dialog != null) {
                             this.dialog.dismiss();
@@ -453,9 +470,9 @@ public class AdminExpenseTableActivity extends AppCompatActivity implements Expe
     }
 
     private String getDateTime(){
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date date = new Date();
-        return dateFormat.format(date);
+        return sdf.format(date);
     }
 
     @Override
@@ -504,7 +521,7 @@ public class AdminExpenseTableActivity extends AppCompatActivity implements Expe
 
                 // Changing action button text color
                 View sbView = snackbar.getView();
-                TextView textView = sbView.findViewById(android.support.design.R.id.snackbar_text);
+                TextView textView = sbView.findViewById(R.id.snackbar_text);
                 textView.setTextColor(Color.YELLOW);
                 snackbar.show();
 
@@ -547,7 +564,7 @@ public class AdminExpenseTableActivity extends AppCompatActivity implements Expe
 
                 // Changing action button text color
                 View sbView = snackbar.getView();
-                TextView textView = sbView.findViewById(android.support.design.R.id.snackbar_text);
+                TextView textView = sbView.findViewById(R.id.snackbar_text);
                 textView.setTextColor(Color.YELLOW);
                 snackbar.show();
 
@@ -556,21 +573,6 @@ public class AdminExpenseTableActivity extends AppCompatActivity implements Expe
         });
 
         return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home)
-            finish();
-
-        if (item.getItemId() == R.id.action_logout) {
-            Intent intent = new Intent(AdminExpenseTableActivity.this,LoginActivity.class);
-            startActivity(intent);
-            Toast.makeText(getApplicationContext(), "succesfully logged out!", Toast.LENGTH_SHORT).show();
-            finish();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override

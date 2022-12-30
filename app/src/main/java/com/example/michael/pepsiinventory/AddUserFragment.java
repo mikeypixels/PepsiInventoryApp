@@ -3,13 +3,12 @@ package com.example.michael.pepsiinventory;
 
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,9 +20,6 @@ import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -297,6 +293,8 @@ public class AddUserFragment extends Fragment {
         protected void onPostExecute(String result) {
             Log.d(TAG, "onPostExecute: " + result);
 
+            storesSting.clear();
+
             storesSting.add("select store");
 
             if (result != null) {
@@ -309,7 +307,8 @@ public class AddUserFragment extends Fragment {
                         for (int i = 0; i < jsonArray.length(); i++) {
                             stores.add(new Store(jsonArray.getJSONObject(i).getString("store_id"),
                                     jsonArray.getJSONObject(i).getString("store_name"),
-                                    jsonArray.getJSONObject(i).getString("location")));
+                                    jsonArray.getJSONObject(i).getString("location"),
+                                    jsonArray.getJSONObject(i).getString("store_type")));
                             storesSting.add(jsonArray.getJSONObject(i).getString("store_name"));
                         }
                         if (this.dialog != null) {

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "188694342222",
+    "firebase_url": "https://pepsiinventory.firebaseio.com",
+    "project_id": "pepsiinventory",
+    "storage_bucket": "pepsiinventory.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:188694342222:android:9d2b6c174d0d06dbddb11f",
+        "android_client_info": {
+          "package_name": "com.example.michael.pepsiinventory"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "188694342222-1tj9pv3mcchh5fhbi88l9f6v8qij0u0r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.michael.pepsiinventory",
+            "certificate_hash": "08480ec067b915b85b6553b2aacc07f16c8af317"
+          }
+        },
+        {
+          "client_id": "188694342222-el8qoamqhb0rgkbg6dealh492v30cco0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKgZiLqnPFk0U7tXjSUcgviyckHFNgKNY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "188694342222-el8qoamqhb0rgkbg6dealh492v30cco0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

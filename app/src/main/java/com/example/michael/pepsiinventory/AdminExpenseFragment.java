@@ -11,7 +11,7 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,8 +39,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -301,9 +299,10 @@ public class AdminExpenseFragment extends Fragment {
                         for (int i = 0; i < jsonArray.length(); i++) {
                             stores.add(new Store(jsonArray.getJSONObject(i).getString("store_id"),
                                     jsonArray.getJSONObject(i).getString("store_name"),
-                                    jsonArray.getJSONObject(i).getString("location")));
+                                    jsonArray.getJSONObject(i).getString("location"),
+                                    jsonArray.getJSONObject(i).getString("store_type")));
                             storesSting.add(jsonArray.getJSONObject(i).getString("store_name"));
-                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("store_id"),jsonArray.getJSONObject(i).getString("store_name"),jsonArray.getJSONObject(i).getString("location")));
+                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("store_id"),jsonArray.getJSONObject(i).getString("store_name"),jsonArray.getJSONObject(i).getString("location"), jsonArray.getJSONObject(i).getString("store_type")));
                         }
                         if (this.dialog != null) {
                             this.dialog.dismiss();

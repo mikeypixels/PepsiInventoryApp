@@ -1,6 +1,5 @@
 package com.example.michael.pepsiinventory;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -9,21 +8,22 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.transition.Slide;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
-import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.gson.JsonObject;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.messaging.FirebaseMessaging;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -60,6 +60,14 @@ public class LoginActivity extends AppCompatActivity {
 
         login_url = getString(R.string.serve_url) + "login";
 
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(LoginActivity.this);
+        String userString = preferences.getString("first_name", "");
+
+        if(!userString.equals("")){
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+        }
+
 //        "http://192.168.43.174/pepsi/login.php"
 
         button.setOnClickListener(new View.OnClickListener() {
@@ -73,7 +81,7 @@ public class LoginActivity extends AppCompatActivity {
                     if (isOnline()) {
                         new LoginTask(LoginActivity.this).execute(username, password);
                     } else {
-                        Toast.makeText(LoginActivity.this, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
+//                        Toast.makeText(LoginActivity.this, "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
                     }
                 }
             }
@@ -161,8 +169,31 @@ public class LoginActivity extends AppCompatActivity {
                     JSONObject userDetails = jsonObject.getJSONObject("result");
 
                     if (jsonObject.getString("status").equals("true")) {
-
                         if(userDetails.getString("status").equals("active")) {
+                            myPrefs = PreferenceManager.getDefaultSharedPreferences(LoginActivity.this);
+
+                            SharedPreferences.Editor editor = myPrefs.edit();
+                            editor.putString("first_name",userDetails.getString("f_name"));
+                            editor.putString("last_name",userDetails.getString("l_name"));
+                            editor.putString("role",userDetails.getString("role"));
+                            editor.putString("store_id",userDetails.getString("store_id"));
+                            editor.putString("user_id",userDetails.getString("id"));
+
+                            editor.apply();
+
+                            if(userDetails.getString("role").equals("Main Admin")||userDetails.getString("role").equals("Admin")){
+                                FirebaseMessaging.getInstance().subscribeToTopic("0").addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<Void> task) {
+                                        String msg = "Subscription is successful!";
+                                        if(!task.isSuccessful()){
+                                            msg = "Subscription is unsuccessful!";
+                                        }
+                                        Toast.makeText(LoginActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                            }
+
                             Intent intent = new Intent(context, MainActivity.class);
                             intent.putExtra("f_name", userDetails.getString("f_name"));
                             intent.putExtra("l_name", userDetails.getString("l_name"));
@@ -170,6 +201,7 @@ public class LoginActivity extends AppCompatActivity {
                             intent.putExtra("status", userDetails.getString("status"));
                             intent.putExtra("user_id", userDetails.getString("id"));
                             intent.putExtra("store_id", userDetails.getString("store_id"));
+                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
                             startActivity(intent);
 //                    SlideAnimationUtil.slideOutToLeft(LoginActivity.this, v.getRootView());
                             finish();
@@ -184,17 +216,6 @@ public class LoginActivity extends AppCompatActivity {
                             }
                             Toast.makeText(context, "Access denied!", Toast.LENGTH_SHORT).show();
                         }
-
-                        myPrefs = PreferenceManager.getDefaultSharedPreferences(LoginActivity.this);
-
-                        SharedPreferences.Editor editor = myPrefs.edit();
-                        editor.putString("first_name",userDetails.getString("f_name"));
-                        editor.putString("last_name",userDetails.getString("l_name"));
-                        editor.putString("role",userDetails.getString("role"));
-                        editor.putString("store_id",userDetails.getString("store_id"));
-                        editor.putString("user_id",userDetails.getString("id"));
-
-                        editor.apply();
 
                     } else {
                         if (this.dialog != null) {
@@ -215,7 +236,7 @@ public class LoginActivity extends AppCompatActivity {
                     this.dialog.dismiss();
                 }
                 Toast.makeText(context,"Oops... Wrong username or password", Toast.LENGTH_LONG).show();
-                return;
+//                return;
             }
 
         }
@@ -224,12 +245,9 @@ public class LoginActivity extends AppCompatActivity {
 
     protected boolean isOnline() {
         ConnectivityManager cm = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        assert cm != null;
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
 //        Log.d(TAG, "OnReceiveNetInfo: " + netInfo.getExtraInfo());
-        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
-            return true;
-        } else {
-            return false;
-        }
+        return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 }

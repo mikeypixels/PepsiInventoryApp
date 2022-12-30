@@ -10,16 +10,17 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
-import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+
+import com.example.michael.pepsiinventory.firebaseNotification.MyFirebaseMessagingService;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import com.google.android.material.snackbar.Snackbar;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -31,8 +32,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SearchView;
 import android.widget.Spinner;
-import android.widget.TableLayout;
-import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -46,19 +45,17 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Objects;
 
 public class AdminSalesTableActivity extends AppCompatActivity implements SalesInterface{
 
     RecyclerView recyclerView;
     RecyclerView.LayoutManager layoutManager;
     AdminSalesTableAdapter adminSalesTableAdapter;
-    TableLayout tableLayout;
     LinearLayout tableRow;
-    android.support.v7.widget.Toolbar toolbar;
+    androidx.appcompat.widget.Toolbar toolbar;
     CollapsingToolbarLayout collapsingToolbarLayout;
     String intentFragment, sales_url, store_url;
-    MenuItem menuItem;
-    MainActivity mainActivity;
     ArrayList<SalesRow> salesRows = new ArrayList<>();
     EditText sn, product_name, quantity, amount, date;
     Spinner spinner;
@@ -87,7 +84,7 @@ public class AdminSalesTableActivity extends AppCompatActivity implements SalesI
         setContentView(R.layout.activity_admin_sales_table);
 
         intentFragment = getIntent().getStringExtra("frgToLoad");
-        tableRow = findViewById(R.id.tableRow1);
+
         spinner = findViewById(R.id.store_spinner);
 
         sales_url = getString(R.string.serve_url) + "sales";
@@ -105,7 +102,7 @@ public class AdminSalesTableActivity extends AppCompatActivity implements SalesI
         toolbar.setNavigationIcon(getResources().getDrawable(R.drawable.ic_arrow_back));
 
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
 
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -148,18 +145,21 @@ public class AdminSalesTableActivity extends AppCompatActivity implements SalesI
 
                 ((TextView) view).setTextColor(Color.WHITE);
 
+                preferences = PreferenceManager.getDefaultSharedPreferences(AdminSalesTableActivity.this);
+
+                SharedPreferences.Editor editor = preferences.edit();
+
                 for (int i = 0; i < storeRowArrayList.size(); i++) {
                     if (spinner.getItemAtPosition(position).toString().equals(storeRowArrayList.get(i).getStore_name())) {
                         store_id = storeRowArrayList.get(i).getStore_id();
+//                        typeInterface.getStoreType(storeRowArrayList.get(i).getStore_type());
+                        editor.putString("store_type", storeRowArrayList.get(i).getStore_type());
                         break;
                     } else {
                         store_id = "0";
                     }
                 }
 
-                preferences = PreferenceManager.getDefaultSharedPreferences(AdminSalesTableActivity.this);
-
-                SharedPreferences.Editor editor = preferences.edit();
                 editor.putString("id_store",store_id);
                 editor.putString("store_name",spinner.getSelectedItem().toString());
                 editor.apply();
@@ -182,7 +182,6 @@ public class AdminSalesTableActivity extends AppCompatActivity implements SalesI
 
                 adminSalesTableAdapter = new AdminSalesTableAdapter(AdminSalesTableActivity.this, salesArrayList, AdminSalesTableActivity.this);
                 recyclerView.setAdapter(adminSalesTableAdapter);
-                adminSalesTableAdapter.notifyDataSetChanged();
 
                 if (store_id.equals("0")) {
                     NumberFormat formatter = new DecimalFormat("#,###");
@@ -227,7 +226,7 @@ public class AdminSalesTableActivity extends AppCompatActivity implements SalesI
 
                 // Changing action button text color
                 View sbView = snackbar.getView();
-                TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+                TextView textView = (TextView) sbView.findViewById(R.id.snackbar_text);
                 textView.setTextColor(Color.YELLOW);
                 snackbar.show();
 
@@ -272,7 +271,7 @@ public class AdminSalesTableActivity extends AppCompatActivity implements SalesI
 
         // Changing action button text color
         View sbView = snackbar.getView();
-        TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+        TextView textView = (TextView) sbView.findViewById(R.id.snackbar_text);
         textView.setTextColor(Color.YELLOW);
         snackbar.show();
     }
@@ -429,15 +428,35 @@ public class AdminSalesTableActivity extends AppCompatActivity implements SalesI
                         for (int i = 0; i < jsonArray.length(); i++) {
                             storeRowArrayList.add(new Store(jsonArray.getJSONObject(i).getString("store_id"),
                                     jsonArray.getJSONObject(i).getString("store_name"),
-                                    jsonArray.getJSONObject(i).getString("location")));
+                                    jsonArray.getJSONObject(i).getString("location"),
+                                    jsonArray.getJSONObject(i).getString("store_type")));
                             storeString.add(jsonArray.getJSONObject(i).getString("store_name"));
 //                            storeDetails.add(new Store(jsonArray.getJSONObject(i).getString("id"),jsonArray.getJSONObject(i).getString("name"),jsonArray.getJSONObject(i).getString("location")));
                         }
+
+                        spinner.setPrompt("select store");
 
                         ArrayAdapter<String> adapter = new ArrayAdapter<>(AdminSalesTableActivity.this, android.R.layout.simple_list_item_1, storeString);
                         spinner.setAdapter(adapter);
 
                         spinner.getBackground().setColorFilter(getResources().getColor(R.color.colorWhite), PorterDuff.Mode.SRC_ATOP);
+
+                        String storeName = MyFirebaseMessagingService.Companion.getMsg();
+
+                        Log.d(TAG, "======================================================" + storeName);
+
+                        int i = 0;
+                        if(!storeName.equals("")){
+                            String[] store_names = storeName.split(" ");
+                            for(String store: storeString){
+                                if(store.contains(store_names[4])){
+                                    Log.d(TAG, "-------------------------------------------" + store_names[4]);
+                                    spinner.setSelection(i);
+                                    break;
+                                }
+                                i++;
+                            }
+                        }
 
                         if (this.dialog != null) {
                             this.dialog.dismiss();
@@ -515,7 +534,7 @@ public class AdminSalesTableActivity extends AppCompatActivity implements SalesI
 
                 // Changing action button text color
                 View sbView = snackbar.getView();
-                TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+                TextView textView = (TextView) sbView.findViewById(R.id.snackbar_text);
                 textView.setTextColor(Color.YELLOW);
                 snackbar.show();
 
@@ -559,7 +578,7 @@ public class AdminSalesTableActivity extends AppCompatActivity implements SalesI
 
                 // Changing action button text color
                 View sbView = snackbar.getView();
-                TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+                TextView textView = (TextView) sbView.findViewById(R.id.snackbar_text);
                 textView.setTextColor(Color.YELLOW);
                 snackbar.show();
 
@@ -573,9 +592,9 @@ public class AdminSalesTableActivity extends AppCompatActivity implements SalesI
     }
 
     private String getDateTime(){
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date date = new Date();
-        return dateFormat.format(date);
+        return sdf.format(date);
     }
 
     @Override
@@ -596,12 +615,9 @@ public class AdminSalesTableActivity extends AppCompatActivity implements SalesI
     protected boolean isOnline() {
         String TAG = LoginActivity.class.getSimpleName();
         ConnectivityManager cm = (ConnectivityManager) AdminSalesTableActivity.this.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        assert cm != null;
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
 //        Log.d(TAG, "OnReceiveNetInfo: " + netInfo.getExtraInfo());
-        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
-            return true;
-        } else {
-            return false;
-        }
+        return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 }

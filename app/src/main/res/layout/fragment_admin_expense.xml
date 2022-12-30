@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".AdminExpenseFragment">
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:id="@+id/cardview"
         android:layout_width="wrap_content"
         android:layout_height="450dp"
@@ -17,7 +17,7 @@
         app:cardCornerRadius="20dp"
         app:cardElevation="6dp">
 
-        <android.support.v7.widget.CardView
+        <androidx.cardview.widget.CardView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
@@ -28,14 +28,14 @@
             android:alpha="0.80">
 
             <TextView
-                android:layout_width="200dp"
+                android:layout_width="240dp"
                 android:layout_height="wrap_content"
                 android:text="Add Expense"
                 android:textSize="30dp"
                 android:textAlignment="center"
                 android:textColor="#fff"/>
 
-        </android.support.v7.widget.CardView>
+        </androidx.cardview.widget.CardView>
 
         <RelativeLayout
             android:layout_width="320dp"
@@ -52,13 +52,13 @@
 
                 <Spinner
                     android:id="@+id/store_spinner"
-                    android:layout_width="150dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="30dp"
                     android:layout_gravity="center_horizontal"
                     android:popupElevation="6dp"
                     android:popupBackground="@color/colorWhite"/>
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent"
                     android:textColorHint="#c0c0c0"
@@ -69,12 +69,12 @@
                         android:id="@+id/name"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint=" Name"
+                        android:hint=" Expense Name"
                         android:textColor="#000"/>
 
-                </android.support.design.widget.TextInputLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent"
                     android:layout_marginTop="5dp"
@@ -87,9 +87,9 @@
                         android:hint=" Amount"
                         android:textColor="#000"/>
 
-                </android.support.design.widget.TextInputLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent"
                     android:layout_marginTop="5dp"
@@ -102,9 +102,9 @@
                         android:hint=" Description"
                         android:textColor="#000"/>
 
-                </android.support.design.widget.TextInputLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent"
                     android:layout_marginTop="5dp"
@@ -118,9 +118,9 @@
                         android:textColor="#000"
                         android:focusable="false"/>
 
-                </android.support.design.widget.TextInputLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
-                <android.support.constraint.ConstraintLayout
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp">
@@ -137,7 +137,8 @@
                         android:text="Submit"
                         android:textAllCaps="false"
                         android:textColor="#fff"
-                        android:theme="@style/MyButton"/>
+                        android:theme="@style/MyButton"
+                        app:layout_constraintTop_toTopOf="parent"/>
 
                     <TextView
                         android:id="@+id/action_bar"
@@ -151,12 +152,12 @@
                         android:textSize="12sp"
                         android:textColor="#FF0000"/>
 
-                </android.support.constraint.ConstraintLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
             </LinearLayout>
 
         </RelativeLayout>
 
-    </android.support.v7.widget.CardView>
+    </androidx.cardview.widget.CardView>
 
-</android.support.constraint.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

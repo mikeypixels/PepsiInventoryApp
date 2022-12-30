@@ -11,11 +11,10 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.appcompat.app.AlertDialog;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,7 +24,6 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -173,7 +171,7 @@ public class AdminExpenseTableAdapter extends RecyclerView.Adapter<AdminExpenseT
                     editButton = dialognew.findViewById(R.id.edit);
                     deleteButton = dialognew.findViewById(R.id.delete);
 
-                    expenseRow.setDescription("");
+//                    expenseRow.setDescription("");
 
                     sn.setText(expenseRow.getNo());
                     product.setText(expenseRow.getExpense_name());
@@ -299,6 +297,7 @@ public class AdminExpenseTableAdapter extends RecyclerView.Adapter<AdminExpenseT
 
                 }
             });
+
         }
     }
 
@@ -399,6 +398,18 @@ public class AdminExpenseTableAdapter extends RecyclerView.Adapter<AdminExpenseT
                     expenseRowArrayList = new ArrayList<>();
                     expenseRowArrayList.addAll(expenseArrayList);
                     notifyItemRangeChanged(position,getItemCount());
+
+                    double total_amount = 0;
+
+                    for(int i = 0; i < expenseRowArrayList.size(); i++){
+                        if(expenseRowArrayList.get(i).getDate().equals(getDateTime()))
+                            total_amount = total_amount + Double.parseDouble(expenseRowArrayList.get(i).getAmount().replaceAll(",",""));
+                    }
+
+                    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+
+                    expenseInterface.showSnackBar(total_amount, preferences.getString("id_store",""), preferences.getString("store_name",""));
+
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
@@ -416,6 +427,12 @@ public class AdminExpenseTableAdapter extends RecyclerView.Adapter<AdminExpenseT
                 }
             }
         }
+    }
+
+    private String getDateTime(){
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date date = new Date();
+        return dateFormat.format(date);
     }
 
     public class ExpenseDeleteTask extends AsyncTask<String, Void, String> {
@@ -478,12 +495,6 @@ public class AdminExpenseTableAdapter extends RecyclerView.Adapter<AdminExpenseT
 
             HttpHandler httpHandler = new HttpHandler();
             return httpHandler.makeServiceDelete(expense_delete_url);
-        }
-
-        private String getDateTime(){
-            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            Date date = new Date();
-            return dateFormat.format(date);
         }
 
         @Override

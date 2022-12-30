@@ -10,20 +10,22 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
-import android.support.design.widget.TabLayout;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.view.ViewPager;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.tabs.TabLayout;
+import com.google.firebase.messaging.FirebaseMessaging;
+
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.core.view.GravityCompat;
+import androidx.viewpager.widget.ViewPager;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
+import androidx.appcompat.widget.Toolbar;
 import android.transition.Slide;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -49,9 +51,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 
-import cn.carbs.android.avatarimageview.library.AvatarImageView;
-
-import static com.bumptech.glide.gifdecoder.GifHeaderParser.TAG;
+import io.getstream.avatarview.AvatarView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private ImageView imgNavHeaderBg;
     private ViewPager viewPager;
-    AvatarImageView img_profile;
+    AvatarView img_profile;
     TextView textView;
     String f_name,l_name;
     String TAG = MainActivity.class.getSimpleName();
@@ -98,8 +98,8 @@ public class MainActivity extends AppCompatActivity {
 
         final SharedPreferences myPrefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
 
-        store_id = getIntent().getStringExtra("store_id");
-        user_id = getIntent().getStringExtra("user_id");
+        store_id = myPrefs.getString("store_id", "");
+        user_id = myPrefs.getString("user_id", "");
 
         mHandler = new Handler();
 
@@ -165,12 +165,12 @@ public class MainActivity extends AppCompatActivity {
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
 
         if(sharedPreferences.getString("role","").equals("Main Admin")||sharedPreferences.getString("role","").equals("Admin")){
-            adapter.addFragment(adminSalesFragment, "Sales");
-            adapter.addFragment(adminExpenseFragment, "Expenses");
+            adapter.addFragment(adminSalesFragment, "Mauzo");
+            adapter.addFragment(adminExpenseFragment, "Matumizi");
             viewPager.setAdapter(adapter);
         }else if(sharedPreferences.getString("role","").equals("Worker")){
-            adapter.addFragment(salesFragment, "Sales");
-            adapter.addFragment(expenseFragment, "Expenses");
+            adapter.addFragment(salesFragment, "Mauzo");
+            adapter.addFragment(expenseFragment, "Matumizi");
             viewPager.setAdapter(adapter);
         }
 
@@ -241,10 +241,10 @@ public class MainActivity extends AppCompatActivity {
                         }else{
                             drawer.closeDrawers();
                             Snackbar snackbar = Snackbar
-                                    .make(coordinatorLayout, "sorry only administrators can access that!", Snackbar.LENGTH_LONG);
+                                    .make(coordinatorLayout, "samahani Admin tu ndio ana uwezo wa kuingia hapa!", Snackbar.LENGTH_LONG);
                             snackbar.setActionTextColor(Color.RED);
                             View sbView = snackbar.getView();
-                            TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+                            TextView textView = (TextView) sbView.findViewById(R.id.snackbar_text);
                             textView.setTextColor(Color.RED);
                             snackbar.show();
                         }
@@ -411,9 +411,20 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_logout) {
+            FirebaseMessaging.getInstance().unsubscribeFromTopic(user_id);
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.remove("user_id");
+            editor.remove("first_name");
+            editor.remove("last_name");
+            editor.remove("role");
+            editor.remove("store_id");
+            editor.apply();
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+//            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
-            Toast.makeText(getApplicationContext(), "succesfully logged out!", Toast.LENGTH_SHORT).show();
+
+            Toast.makeText(getApplicationContext(), "umetoka kikamilifu!", Toast.LENGTH_SHORT).show();
             finish();
             return true;
         }else if(id == R.id.action_change_passwd){
@@ -432,33 +443,33 @@ public class MainActivity extends AppCompatActivity {
 
                     AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
 
-                    builder.setTitle("Alert");
-                    builder.setMessage("Are you sure you want to change the password?");
+                    builder.setTitle("Tahadhari");
+                    builder.setMessage("Hakikisha kama unataka kubadili nenosiri?");
 
                     if(new_passwd.getText().toString().isEmpty()||confirm_passwd.getText().toString().isEmpty()){
-                        Toast.makeText(MainActivity.this, "Please fill all fields!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "tafadhali jaza nafasi zote!", Toast.LENGTH_SHORT).show();
                     }
                     else{
                         if (new_passwd.getText().toString().equals(confirm_passwd.getText().toString())) {
-                            builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            builder.setPositiveButton("Ndio", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
 
                                     if(new_passwd.getText().toString().isEmpty()||confirm_passwd.getText().toString().isEmpty()){
-                                        Toast.makeText(MainActivity.this, "Please fill all fields!", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(MainActivity.this, "Tafadhali jaza nafasi zote!", Toast.LENGTH_SHORT).show();
                                     }else {
                                         if (new_passwd.getText().toString().equals(confirm_passwd.getText().toString())) {
                                             new UpdateUserTask(MainActivity.this).execute(sharedPreferences.getString("user_id",""), new_passwd.getText().toString());
                                             dialognew.dismiss();
                                         }
                                         else
-                                            Toast.makeText(MainActivity.this, "Incorrect match!", Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(MainActivity.this, "Nenosiri hazifanani!", Toast.LENGTH_SHORT).show();
                                     }
 
                                 }
                             });
 
-                            builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            builder.setNegativeButton("Hapana", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
 
@@ -469,7 +480,7 @@ public class MainActivity extends AppCompatActivity {
                             dialog.show();
                         }
                         else
-                            Toast.makeText(MainActivity.this, "Incorrect match!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "Nenosiri hazifanani!", Toast.LENGTH_SHORT).show();
                     }
 
                 }
@@ -561,16 +572,16 @@ public class MainActivity extends AppCompatActivity {
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
-                    Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "umebadili kikamilifu!", Toast.LENGTH_SHORT).show();
 //                    SlideAnimationUtil.slideOutToLeft(LoginActivity.this, v.getRootView());
                 } else {
-                    Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
+                    Toast.makeText(context, "Oops... Kuna tatizo mahali", Toast.LENGTH_LONG).show();
                     if (this.dialog != null) {
                         this.dialog.dismiss();
                     }
                 }
             } else {
-                Toast.makeText(context, "Oops... Something went wrong", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "Oops... Kuna tatizo mahali", Toast.LENGTH_LONG).show();
                 if (this.dialog != null) {
                     this.dialog.dismiss();
                 }

@@ -8,7 +8,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -59,9 +59,8 @@ public class ChangePriceFragment extends Fragment {
         spinner = view.findViewById(R.id.product_spinner);
         editText = view.findViewById(R.id.price);
         button = view.findViewById(R.id.submit);
-        textView = view.findViewById(R.id.textView);
 
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(container.getContext(),R.array.products, android.R.layout.simple_spinner_item);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(container.getContext(),R.array.all_products, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         spinner.getBackground().setColorFilter(getResources().getColor(R.color.colorBlack), PorterDuff.Mode.SRC_ATOP);
@@ -79,7 +78,12 @@ public class ChangePriceFragment extends Fragment {
                     product_id = "3";
                 }else if(spinner.getSelectedItem().toString().equals("Takeaway")){
                     product_id = "4";
-                }
+                }else if(spinner.getSelectedItem().toString().equals("Maji makubwa"))
+                    product_id = "5";
+                else if(spinner.getSelectedItem().toString().equals("Maji madogo"))
+                    product_id = "6";
+                else if(spinner.getSelectedItem().toString().equals("Soda"))
+                    product_id = "7";
             }
 
             @Override
@@ -98,7 +102,7 @@ public class ChangePriceFragment extends Fragment {
                     textView.setText("please the price field!");
                 }else{
                     if (isOnline()) {
-                        new ChangePriceTask(getContext()).execute(product_id, editText.getText().toString());
+                        new ChangePriceTask(getContext()).execute(product_id, editText.getText().toString().replaceAll(",",""));
                     } else
                         Toast.makeText(getContext(), "Check your Internet Connection!", Toast.LENGTH_SHORT).show();
                 }

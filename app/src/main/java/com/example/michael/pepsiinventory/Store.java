@@ -2,12 +2,13 @@ package com.example.michael.pepsiinventory;
 
 public class Store {
 
-    String store_id,store_name,location;
+    String store_id,store_name,location, store_type;
 
-    public Store(String store_id, String store_name, String location) {
+    public Store(String store_id, String store_name, String location, String store_type) {
         this.store_id = store_id;
         this.store_name = store_name;
         this.location = location;
+        this.store_type = store_type;
     }
 
     public String getStore_id() {
@@ -32,5 +33,13 @@ public class Store {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getStore_type() {
+        return store_type;
+    }
+
+    public void setStore_type(String store_type) {
+        this.store_type = store_type;
     }
 }

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".AddUserFragment">
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:id="@+id/cardView"
         android:layout_width="wrap_content"
         android:layout_height="470dp"
@@ -17,8 +17,8 @@
         app:cardCornerRadius="20dp"
         app:cardElevation="6dp">
 
-        <android.support.v7.widget.CardView
-            android:layout_width="160dp"
+        <androidx.cardview.widget.CardView
+            android:layout_width="240dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="18dp"
@@ -35,7 +35,7 @@
                 android:layout_gravity="center"
                 android:textColor="#fff"/>
 
-        </android.support.v7.widget.CardView>
+        </androidx.cardview.widget.CardView>
 
         <RelativeLayout
             android:layout_width="320dp"
@@ -50,7 +50,7 @@
                 android:orientation="vertical"
                 android:paddingTop="0dp">
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent"
                     android:layout_marginTop="0dp"
@@ -64,9 +64,9 @@
                         android:hint=" First name"
                         android:textColor="#000"/>
 
-                </android.support.design.widget.TextInputLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent"
                     android:layout_marginTop="0dp"
@@ -80,9 +80,9 @@
                         android:hint=" Last name"
                         android:textColor="#000"/>
 
-                </android.support.design.widget.TextInputLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
-                <android.support.design.widget.TextInputLayout
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent"
                     android:layout_marginTop="0dp"
@@ -93,10 +93,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="1dp"
-                        android:hint=" username"
+                        android:hint=" Username"
                         android:textColor="#000"/>
 
-                </android.support.design.widget.TextInputLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
                 <RelativeLayout
                     android:layout_width="wrap_content"
@@ -139,7 +139,7 @@
 
                 <Spinner
                     android:id="@+id/spinner1"
-                    android:layout_width="150dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="30dp"
                     android:popupElevation="6dp"
                     android:layout_marginTop="10dp"
@@ -148,14 +148,14 @@
 
                 <Spinner
                     android:id="@+id/spinner"
-                    android:layout_width="150dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="30dp"
                     android:popupElevation="6dp"
                     android:layout_marginTop="10dp"
                     android:layout_gravity="center"
                     android:popupBackground="@color/colorWhite"/>
 
-                <android.support.constraint.ConstraintLayout
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="15dp">
@@ -171,7 +171,8 @@
                         android:text="Submit"
                         android:textAllCaps="false"
                         android:textColor="#fff"
-                        android:theme="@style/MyButton"/>
+                        android:theme="@style/MyButton"
+                        app:layout_constraintTop_toTopOf="parent"/>
 
                     <TextView
                         android:id="@+id/action_txt"
@@ -185,13 +186,13 @@
                         android:textSize="12sp"
                         android:textColor="#FF0000"/>
 
-                </android.support.constraint.ConstraintLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
             </LinearLayout>
 
         </RelativeLayout>
 
-    </android.support.v7.widget.CardView>
+    </androidx.cardview.widget.CardView>
 
 
-</android.support.constraint.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
